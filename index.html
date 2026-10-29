@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SUBASTAS ONLINE | Subastas de vehículos de Estados Unidos</title>
+<meta name="description" content="Subastas en línea de vehículos usados y siniestrados de Estados Unidos. Catálogo de referencia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   1. TOKENS DE MARCA
+   ========================================================= */
+:root{
+  --brand:#1F4BFF; --brand-dark:#1338D6; --brand-soft:#E8EDFF;
+  --ink:#1A1F27; --ink-2:#5B6370; --bg:#FFFFFF; --bg-2:#F2F4F7; --line:#DCE1E8;
+  --navy:#121826;                        /* barra de navegación y encabezado de tabla */
+  --live:#0E8A56; --live-ink:#FFFFFF;    /* en vivo / unirse */
+  --alert:#C4321F;                       /* próxima subasta */
+  --font:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --cond:'IBM Plex Sans Condensed', 'Arial Narrow', var(--font);
+  --r:8px; color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);font-size:15px;line-height:1.5;color:var(--ink);background:var(--bg);font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+img,svg{display:block;max-width:100%}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.wrap{max-width:1440px;margin:0 auto;padding:0 24px}
+h1,h2,h3{margin:0;line-height:1.15}
+h2{font-family:var(--cond);font-size:1.6rem}
+.muted{color:var(--ink-2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:var(--r);padding:9px 16px;font-weight:600;cursor:pointer;white-space:nowrap;line-height:1.2}
+.btn-brand{background:var(--brand);color:#fff}.btn-brand:hover{background:var(--brand-dark)}
+.btn-live{background:var(--live);color:var(--live-ink)}.btn-live:hover{filter:brightness(.92)}
+.btn-line{background:var(--bg);border-color:var(--line)}.btn-line:hover{border-color:var(--ink-2)}
+.btn-outline{background:var(--bg);border-color:var(--brand);color:var(--brand)}.btn-outline:hover{background:var(--brand-soft)}
+.btn-sm{padding:6px 12px;font-size:.85rem}
+.btn-block{width:100%}
+
+/* Fotos: ilustración de respaldo + foto real encima */
+.ph{display:block;width:100%;height:100%;position:relative;overflow:hidden;background:#E6E9ED}
+.ph svg{width:100%;height:100%}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+/* =========================================================
+   2. BARRA UTILITARIA + HEADER
+   ========================================================= */
+.utility{background:#0B0F17;color:#D7DBE2;font-size:.83rem}
+.utility .wrap{display:flex;justify-content:space-between;align-items:center;height:36px}
+.utility a{opacity:.85}.utility a:hover{opacity:1}
+.utility select{background:transparent;border:0;color:inherit;font-size:.83rem}
+.utility select option{color:#111}
+.u-right{display:flex;gap:18px}
+.header{background:var(--bg);border-bottom:1px solid var(--line)}
+.header .wrap{display:flex;align-items:center;gap:24px;height:74px}
+.logo{display:flex;align-items:center;gap:10px;flex:none}
+.logo-mark{width:40px;height:40px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;font-family:var(--cond);font-weight:700;font-size:1.05rem}
+.logo-text{font-family:var(--cond);font-weight:700;font-size:1.3rem;letter-spacing:.02em}
+.logo-text span{color:var(--ink-2);font-weight:600}
+.search{flex:1;display:flex;max-width:760px;border:2px solid var(--ink);border-radius:var(--r);overflow:hidden}
+.search:focus-within{border-color:var(--brand)}
+.search input{flex:1;border:0;padding:11px 14px;min-width:0}
+.search input:focus{outline:none}
+.search button{border:0;background:var(--brand);color:#fff;padding:0 24px;font-weight:600;cursor:pointer}
+.menu-toggle{display:none;margin-left:auto;background:none;border:1px solid var(--line);border-radius:var(--r);width:44px;height:44px;cursor:pointer}
+
+/* =========================================================
+   3. NAVEGACIÓN OSCURA
+   ========================================================= */
+.nav{background:var(--navy);color:#fff;position:sticky;top:0;z-index:40}
+.nav ul{list-style:none;margin:0;padding:0}
+.nav > .wrap > ul{display:flex;align-items:center;gap:4px;min-height:56px}
+.nav li{position:relative}
+.nav-link{display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:6px;font-weight:500;font-size:.95rem;background:none;border:0;cursor:pointer;color:#fff}
+.nav-link:hover,.nav li.open > .nav-link{background:rgba(255,255,255,.1)}
+.nav .nav-sell{background:var(--brand);font-weight:600;margin-left:6px}
+.nav .nav-sell:hover{background:var(--brand-dark)}
+.nav .nav-help{background:rgba(255,255,255,.08)}
+.caret{width:10px;height:10px;transition:transform .15s}
+.nav li.open .caret{transform:rotate(180deg)}
+.drop{display:none;position:absolute;left:0;top:calc(100% + 4px);min-width:240px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 14px 34px rgba(10,15,25,.18);padding:8px;z-index:50}
+.nav li.open > .drop{display:block}
+.drop a{display:block;padding:9px 12px;border-radius:6px;font-size:.92rem}
+.drop a:hover{background:var(--bg-2);color:var(--brand)}
+
+/* =========================================================
+   4. HERO (fondo oscuro, tarjetas de pasos, foto a la derecha)
+   ========================================================= */
+.hero{position:relative;overflow:hidden;color:#fff;background:linear-gradient(115deg,#0F1420 0%,#16213F 48%,#1D35A8 100%)}
+.hero::before{content:"";position:absolute;right:-6%;top:0;bottom:0;width:48%;background:linear-gradient(115deg,transparent 0 12%,rgba(31,75,255,.55) 12% 14%,transparent 14%);pointer-events:none}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:center;padding-top:44px;padding-bottom:64px}
+.hero h1{font-family:var(--cond);font-size:clamp(2.1rem,4vw,3.3rem);font-weight:700;letter-spacing:-.01em}
+.hero-sub{margin:10px 0 0;font-size:1.15rem;color:#D5DBEA}
+.hero-sub b{color:#fff;font-size:1.5rem;font-family:var(--cond)}
+.step-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:28px 0}
+.step{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;backdrop-filter:blur(4px)}
+.step-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.step-top b{width:36px;height:36px;border-radius:50%;background:#fff;color:var(--navy);display:grid;place-items:center;font-family:var(--cond);font-size:1.15rem;flex:none}
+.step-top h3{font-size:1.25rem}
+.step p{margin:0;color:#D5DBEA;font-size:.95rem}
+.step p strong{color:#fff}
+.hero-cta{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--navy);font-weight:700;font-size:1.05rem;padding:14px 34px;border-radius:999px}
+.hero-cta:hover{background:var(--brand-soft)}
+.hero-media{position:relative;height:100%;min-height:320px}
+.hero-photo{position:absolute;border-radius:14px;overflow:hidden;box-shadow:0 24px 50px rgba(0,0,0,.4)}
+.hero-photo.a{right:0;top:0;width:88%;aspect-ratio:4/3}
+.hero-photo.b{left:0;bottom:-20px;width:58%;aspect-ratio:4/3;border:4px solid #16213F}
+.hero-photo .tag{position:absolute;left:10px;bottom:10px;z-index:2}
+.live-ribbon{position:absolute;right:0;bottom:0;background:var(--live);color:#fff;font-weight:700;padding:12px 26px;border-radius:14px 0 0 0;display:flex;align-items:center;gap:10px;z-index:3}
+.pulse{width:10px;height:10px;border-radius:50%;background:#fff;animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}70%{box-shadow:0 0 0 10px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.tag{background:rgba(10,14,22,.78);color:#fff;font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:5px}
+
+/* =========================================================
+   5. CATEGORÍAS RÁPIDAS
+   ========================================================= */
+.cats-sec{padding:26px 0;border-bottom:1px solid var(--line)}
+.cats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.cat{border:1px solid var(--line);border-radius:10px;background:var(--bg);overflow:hidden;cursor:pointer;padding:0;text-align:left}
+.cat:hover{border-color:var(--brand)}
+.cat .ph{aspect-ratio:16/10;height:auto}
+.cat div{padding:9px 12px}
+.cat strong{display:block;font-size:.95rem}
+.cat small{color:var(--ink-2)}
+
+/* =========================================================
+   6. BUSCADOR DE VEHÍCULOS (filtros + resultados)
+   ========================================================= */
+.finder{display:grid;grid-template-columns:300px 1fr;gap:0;border-top:1px solid var(--line)}
+.filters{border-right:1px solid var(--line);background:var(--bg);position:sticky;top:56px;align-self:start;max-height:calc(100vh - 56px);overflow:auto}
+.f-head{display:flex;justify-content:space-between;align-items:center;padding:18px 18px 10px}
+.f-head h2{font-size:1.4rem}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 18px;font-size:.93rem}
+.switch{position:relative;width:46px;height:26px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch span{position:absolute;inset:0;background:#C9CED6;border-radius:999px;cursor:pointer;transition:.15s}
+.switch span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch input:checked + span{background:var(--brand)}
+.switch input:checked + span::before{transform:translateX(20px)}
+.f-group{border-top:1px solid var(--line)}
+.f-group summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:13px 18px;font-weight:600;cursor:pointer;background:var(--bg-2)}
+.f-group summary::-webkit-details-marker{display:none}
+.f-group summary .tools{display:flex;gap:14px;align-items:center;font-weight:500}
+.f-group summary .reset{color:var(--brand);font-size:.86rem;background:none;border:0;cursor:pointer;padding:0}
+.f-group summary .pm::before{content:"+";font-size:1.2rem;font-weight:400}
+.f-group[open] summary .pm::before{content:"−"}
+.f-body{padding:10px 18px 16px;display:flex;flex-direction:column;gap:8px}
+.f-body label.ck{display:flex;align-items:center;gap:10px;font-size:.92rem;cursor:pointer}
+.f-body label.ck input{width:18px;height:18px;accent-color:var(--brand)}
+.f-body label.ck small{color:var(--ink-2)}
+.f-body .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.f-body input[type=number],.f-body select,.f-body input[type=text]{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-height:40px;background:var(--bg)}
+.f-more{color:var(--brand);background:none;border:0;padding:0;font-weight:600;cursor:pointer;text-align:left;font-size:.88rem}
+.results{padding:20px 24px 40px;min-width:0}
+.r-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.crumbs{font-size:.95rem;color:var(--brand);font-weight:600}
+.crumbs span{color:var(--ink)}
+.r-title-main{font-family:var(--cond);font-size:clamp(1.4rem,2.4vw,2rem);margin-top:6px}
+.r-title-main b{color:var(--brand)}
+.r-actions{display:flex;gap:8px;flex-wrap:wrap}
+.r-sort{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:12px 0 14px;flex-wrap:wrap}
+.r-sort select{border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-height:40px;background:var(--bg)}
+.active-chips{display:flex;gap:6px;flex-wrap:wrap;margin-right:auto}
+.achip{display:inline-flex;align-items:center;gap:6px;background:var(--brand-soft);color:var(--brand);border:0;border-radius:999px;padding:5px 10px;font-size:.82rem;font-weight:600;cursor:pointer}
+/* Encabezado y filas de resultados */
+.r-grid{display:grid;grid-template-columns:200px minmax(220px,1.5fr) minmax(150px,1fr) minmax(170px,1.1fr) minmax(170px,1.1fr) minmax(160px,.95fr)}
+.r-head{background:var(--navy);color:#fff;border-radius:8px 8px 0 0;font-weight:600;font-size:1.02rem}
+.r-head > div{padding:14px 14px}
+.r-head > div + div{border-left:1px solid rgba(255,255,255,.12)}
+.r-row{border:1px solid var(--line);border-top:0;background:var(--bg)}
+.r-row:nth-child(even){background:#FAFBFC}
+.r-row:hover{background:var(--bg-2)}
+.r-row > div{padding:14px;font-size:.93rem}
+.r-row > .c-img{padding:8px}
+.c-img .ph{aspect-ratio:4/3;height:auto;border-radius:6px;cursor:pointer}
+.c-lot .v-name{color:var(--brand);font-weight:700;font-size:1.08rem;line-height:1.25;cursor:pointer;text-transform:uppercase}
+.c-lot .v-name:hover{text-decoration:underline}
+.c-lot .lotno{margin:6px 0 10px;font-size:.88rem}
+.c-lot .lotno a{color:var(--brand);font-weight:600}
+.lot-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.watch{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--brand);color:var(--brand);background:var(--bg);border-radius:999px;padding:5px 12px;font-weight:600;font-size:.85rem;cursor:pointer}
+.watch svg{width:15px;height:15px}
+.watch[aria-pressed="true"]{background:var(--brand);color:#fff}
+.watch[aria-pressed="true"] path{fill:currentColor}
+.badge{display:inline-block;font-size:.74rem;font-weight:600;padding:2px 8px;border-radius:5px;border:1px solid var(--line);background:var(--bg)}
+.badge-ok{color:var(--live);border-color:currentColor}
+.k{display:block;color:var(--ink-2);font-size:.82rem}
+.v{display:block;font-size:.98rem;margin-bottom:8px}
+.c-cond .v{margin-bottom:4px}
+.yard{color:var(--brand);font-weight:700;text-transform:uppercase;font-size:.98rem}
+.yard:hover{text-decoration:underline}
+.sale-live{color:var(--live);font-weight:700;margin-top:6px}
+.sale-next{color:var(--alert);font-weight:700;margin-top:6px}
+.bid-amt{font-size:1.25rem;font-weight:700;margin:2px 0 10px}
+.bid-amt small{font-size:.75rem;font-weight:500;color:var(--ink-2)}
+.c-bids .btn{width:100%;max-width:190px;margin-bottom:6px;white-space:normal;padding:9px 10px}
+.empty{padding:50px;text-align:center;color:var(--ink-2);border:1px solid var(--line);border-top:0}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.pages{display:flex;gap:6px;flex-wrap:wrap}
+/* Vista de cuadrícula */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.card{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
+.card .ph{aspect-ratio:4/3;height:auto;cursor:pointer}
+.card-b{padding:12px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card-b .v-name{color:var(--brand);font-weight:700;text-transform:uppercase;cursor:pointer}
+.card-line{display:flex;justify-content:space-between;font-size:.84rem;color:var(--ink-2);gap:8px}
+
+/* =========================================================
+   7. SUBASTAS DE HOY, RESULTADOS, VENDER
+   ========================================================= */
+.sec{padding:40px 0}
+.sec-alt{background:var(--bg-2)}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:16px}
+.two{display:grid;grid-template-columns:1.3fr 1fr;gap:28px}
+.list{border:1px solid var(--line);border-radius:10px;background:var(--bg);overflow:hidden}
+.list-row{display:grid;grid-template-columns:1fr auto auto auto;gap:14px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.list-row:last-child{border-bottom:0}
+.list-row strong{display:block}.list-row small{color:var(--ink-2)}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:900px;font-size:.92rem}
+th{background:var(--navy);color:#fff;text-align:left;padding:11px 12px;font-weight:600}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
+.sell{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.sell-card{border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.sell-card p{margin:0;color:var(--ink-2);flex:1}
+
+/* =========================================================
+   8. MODAL DE DETALLE + TOAST
+   ========================================================= */
+.modal-back{position:fixed;inset:0;background:rgba(10,14,22,.6);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--bg);border-radius:14px;width:100%;max-width:960px;max-height:calc(100vh - 40px);overflow:auto;display:grid;grid-template-columns:1.2fr 1fr}
+.modal .ph{aspect-ratio:4/3;height:auto}
+.m-body{padding:22px;display:flex;flex-direction:column;gap:12px}
+.m-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:50%;border:0;background:#fff;cursor:pointer;font-size:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:.9rem}
+.facts div{border-bottom:1px solid var(--line);padding-bottom:6px}
+.bidbox{background:var(--bg-2);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.bidbox input{border:1px solid var(--line);border-radius:6px;padding:10px;font-size:1.05rem;font-weight:600;width:100%}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+
+/* =========================================================
+   9. FOOTER
+   ========================================================= */
+.footer{background:#0B0F17;color:#D7DBE2;padding:40px 0 24px;font-size:.9rem}
+.foot-cols{display:grid;grid-template-columns:1.3fr repeat(4,1fr);gap:24px}
+.footer h4{margin:0 0 10px;color:#fff}
+.footer ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.footer a{opacity:.8}.footer a:hover{opacity:1}
+.credits{margin-top:22px;font-size:.8rem;opacity:.85}
+.credits summary{cursor:pointer}
+.credits ul{columns:3;column-gap:20px;margin-top:10px;display:block}
+.credits li{break-inside:avoid;margin-bottom:4px}
+.foot-bottom{margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.8rem;opacity:.7}
+
+/* =========================================================
+   10. RESPONSIVE
+   ========================================================= */
+@media (max-width:1200px){
+  .r-grid{grid-template-columns:170px minmax(200px,1.4fr) 1fr 1fr 1fr 150px}
+  .cats{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:1000px){
+  .hero .wrap{grid-template-columns:1fr}
+  .hero-media{min-height:260px;margin-bottom:30px}
+  .step-cards{grid-template-columns:1fr}
+  .finder{grid-template-columns:1fr}
+  .filters{position:fixed;inset:0;z-index:80;max-height:none;transform:translateX(-100%);transition:transform .25s;padding-bottom:80px}
+  .filters.open{transform:none}
+  .f-mobile{display:inline-flex!important}
+  .f-apply{display:block!important;position:fixed;left:0;right:0;bottom:0;padding:12px 18px;background:var(--bg);border-top:1px solid var(--line)}
+  .r-head{display:none}
+  .r-row{grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}
+  .r-row > div{padding:10px 12px;font-size:.88rem}
+  .r-row > .c-veh,.r-row > .c-cond,.r-row > .c-sale,.r-row > .c-bids{border-top:1px solid var(--line)}
+  .c-lot .v-name{font-size:.95rem}
+  .two,.sell{grid-template-columns:1fr}
+  .modal{grid-template-columns:1fr}
+  .foot-cols{grid-template-columns:1fr 1fr}
+  .credits ul{columns:1}
+}
+@media (max-width:760px){
+  .utility .hide-sm{display:none}
+  .header .wrap{flex-wrap:wrap;height:auto;padding-top:12px;padding-bottom:12px}
+  .search{order:3;flex-basis:100%;max-width:none}
+  .menu-toggle{display:grid;place-items:center}
+  .nav > .wrap > ul{display:none;flex-direction:column;align-items:stretch;padding:8px 0}
+  .nav.open > .wrap > ul{display:flex}
+  .drop{position:static;box-shadow:none;border:0;background:transparent;color:#fff}
+  .drop a:hover{background:rgba(255,255,255,.08);color:#fff}
+  .cats{grid-template-columns:repeat(2,1fr)}
+  .hero-media{min-height:0}
+  .hero-photo.b{display:none}
+  .hero-photo.a{position:relative;width:100%}
+  .live-ribbon{position:static;border-radius:0;justify-content:center}
+  .results{padding:16px}
+}
+.f-mobile,.f-apply{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ======================= BARRA UTILITARIA ======================= -->
+<div class="utility"><div class="wrap">
+  <select aria-label="País e idioma"><option>Estados Unidos | Español</option><option>Estados Unidos | English</option><option>Colombia | Español</option></select>
+  <div class="u-right"><a href="#" class="hide-sm">Centro de ayuda</a><a href="#" class="hide-sm">Portal de vendedores</a><a href="#">Registrarse</a><a href="#">Iniciar sesión</a></div>
+</div></div>
+
+<!-- ======================= HEADER ======================= -->
+<header class="header"><div class="wrap">
+  <a class="logo" href="#"><span class="logo-mark">SO</span><span class="logo-text">SUBASTAS <span>ONLINE</span></span></a>
+  <form class="search" role="search" onsubmit="event.preventDefault();quickSearch(this.q.value)">
+    <input name="q" placeholder="Buscar por marca, modelo, año o número de lote" aria-label="Buscar inventario">
+    <button type="submit">Buscar</button>
+  </form>
+  <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg></button>
+</div></header>
+
+<!-- ======================= NAVEGACIÓN ======================= -->
+<nav class="nav" id="nav" aria-label="Principal"><div class="wrap"><ul>
+  <li><a class="nav-link" href="#hoy">Cómo funciona</a></li>
+  <li><button class="nav-link" aria-expanded="false">Inventario <svg class="caret" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    <div class="drop"><a href="#inventario">Buscador de vehículos</a><a href="#hoy">Lista de ventas</a><a href="#inventario" onclick="showWatchlist()">Lista de seguimiento</a><a href="#resultados">Resultados de ventas</a></div></li>
+  <li><button class="nav-link" aria-expanded="false">Subastas <svg class="caret" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    <div class="drop"><a href="#hoy">Subastas de hoy</a><a href="#hoy">Calendario de subastas</a><a href="#inventario" onclick="setToggle('liveOnly',true)">Unirse a subastas en vivo</a></div></li>
+  <li><a class="nav-link" href="#hoy">Ubicaciones</a></li>
+  <li><button class="nav-link" aria-expanded="false">Servicios y soporte <svg class="caret" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    <div class="drop"><a href="#">Transporte de vehículos</a><a href="#">Informe del vehículo</a><a href="#">Inspección presencial</a><a href="#">Opciones de pago</a></div></li>
+  <li><a class="nav-link nav-help" href="#">Centro de ayuda</a></li>
+  <li><button class="nav-link nav-sell" aria-expanded="false">Vender mi vehículo <svg class="caret" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    <div class="drop"><a href="#vender">Particulares</a><a href="#vender">Empresas y flotas</a><a href="#vender">Concesionarios</a></div></li>
+</ul></div></nav>
+
+<main>
+<!-- ======================= HERO ======================= -->
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Subastas de vehículos 100 % en línea</h1>
+      <p class="hero-sub">Más de <b id="heroCount">0</b> carros, camionetas y SUV usados y siniestrados de Estados Unidos en subasta.</p>
+      <div class="step-cards">
+        <div class="step"><div class="step-top"><b>1</b><h3>Regístrate</h3></div><p>Crea tu cuenta gratis y verifica tu identidad para ofertar.</p></div>
+        <div class="step"><div class="step-top"><b>2</b><h3>Encuentra</h3></div><p>Filtra por marca, año, daño, título y patio entre <strong id="heroActive">0</strong> lotes activos.</p></div>
+        <div class="step"><div class="step-top"><b>3</b><h3>Oferta</h3></div><p>Participa en subastas en vivo de lunes a viernes.</p></div>
+      </div>
+      <a class="hero-cta" href="#inventario">Explorar el inventario</a>
+    </div>
+    <div class="hero-media" id="heroMedia"></div>
+  </div>
+  <a class="live-ribbon" href="#inventario" onclick="setToggle('liveOnly',true)"><span class="pulse"></span><span id="liveCount">0</span> lotes en subasta en vivo ahora</a>
+</section>
+
+<!-- ======================= CATEGORÍAS ======================= -->
+<section class="cats-sec"><div class="wrap"><div class="cats" id="cats"></div></div></section>
+
+<!-- ======================= BUSCADOR DE VEHÍCULOS ======================= -->
+<section id="inventario">
+  <div class="finder">
+    <aside class="filters" id="filters" aria-label="Filtros">
+      <div class="f-head"><h2>Filtros</h2><div style="display:flex;gap:10px;align-items:center"><button class="f-more" onclick="resetAll()">Limpiar todo</button><button class="btn btn-line btn-sm f-mobile" onclick="$('#filters').classList.remove('open')">Cerrar</button></div></div>
+      <div id="filterBody"></div>
+      <div class="f-apply"><button class="btn btn-brand btn-block" onclick="$('#filters').classList.remove('open')">Ver <span id="applyCount">0</span> resultados</button></div>
+    </aside>
+    <div class="results">
+      <div class="r-top">
+        <div>
+          <div class="crumbs">Inicio / Buscador de vehículos <span id="crumbExtra"></span></div>
+          <h2 class="r-title-main" id="resultsTitle"></h2>
+        </div>
+        <div class="r-actions">
+          <button class="btn btn-line btn-sm f-mobile" onclick="$('#filters').classList.add('open')">Filtros</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">Exportar</button>
+          <button class="btn btn-outline btn-sm" onclick="toast('Búsqueda guardada.')">Guardar búsqueda</button>
+          <button class="btn btn-brand btn-sm" id="viewBtn" onclick="toggleView()">Vista de cuadrícula</button>
+        </div>
+      </div>
+      <div class="r-sort">
+        <div class="active-chips" id="activeChips"></div>
+        <label for="sortSel" class="muted" style="font-weight:600">Ordenar por:</label>
+        <select id="sortSel">
+          <option value="ends:1">Cierre más próximo</option>
+          <option value="published:-1">Recién agregados</option>
+          <option value="bid:1">Puja menor</option>
+          <option value="bid:-1">Puja mayor</option>
+          <option value="year:-1">Año más reciente</option>
+          <option value="year:1">Año más antiguo</option>
+          <option value="miles:1">Menor kilometraje</option>
+        </select>
+      </div>
+      <div id="resultsList"></div>
+      <div class="pager">
+        <div class="muted" id="pageInfo"></div>
+        <div class="pages" id="pages"></div>
+        <label class="muted">Mostrar <select id="perPage" style="border:1px solid var(--line);border-radius:6px;padding:6px"><option>10</option><option selected>20</option><option>50</option></select></label>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= SUBASTAS DE HOY + UBICACIONES ======================= -->
+<section class="sec sec-alt" id="hoy"><div class="wrap two">
+  <div><div class="sec-head"><h2>Subastas de hoy</h2></div><div class="list" id="todayList"></div></div>
+  <div><div class="sec-head"><h2>Patios</h2></div><div class="list" id="locList"></div></div>
+</div></section>
+
+<!-- ======================= RESULTADOS ======================= -->
+<section class="sec" id="resultados"><div class="wrap">
+  <div class="sec-head"><div><h2>Subastados recientemente</h2><p class="muted" style="margin:4px 0 0">Precio final de cada lote cerrado. Catálogo ficticio de referencia.</p></div></div>
+  <div id="soldTable"></div>
+</div></section>
+
+<!-- ======================= VENDER ======================= -->
+<section class="sec sec-alt" id="vender"><div class="wrap">
+  <div class="sec-head"><h2>Vende tu vehículo en subasta</h2></div>
+  <div class="sell">
+    <div class="sell-card"><h3>Particulares</h3><p>Publica tu carro, define puja inicial y reserva, y recibe ofertas de compradores verificados.</p><a class="btn btn-line" href="#">Vender mi vehículo</a></div>
+    <div class="sell-card"><h3>Empresas y flotas</h3><p>Vende varios vehículos con reportes de resultados por lote.</p><a class="btn btn-line" href="#">Soluciones para empresas</a></div>
+    <div class="sell-card"><h3>Concesionarios</h3><p>Rota inventario de usados con subastas programadas.</p><a class="btn btn-line" href="#">Programa para concesionarios</a></div>
+  </div>
+</div></section>
+</main>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="footer"><div class="wrap">
+  <div class="foot-cols">
+    <div><a class="logo" href="#"><span class="logo-mark">SO</span><span class="logo-text" style="color:#fff">SUBASTAS <span style="color:#AEB5C0">ONLINE</span></span></a><p style="opacity:.75;margin-top:12px">Subastas en línea de vehículos de Estados Unidos.</p></div>
+    <div><h4>Comprar</h4><ul><li><a href="#inventario">Buscador</a></li><li><a href="#hoy">Subastas de hoy</a></li><li><a href="#resultados">Resultados</a></li></ul></div>
+    <div><h4>Vender</h4><ul><li><a href="#vender">Particulares</a></li><li><a href="#vender">Empresas</a></li><li><a href="#vender">Concesionarios</a></li></ul></div>
+    <div><h4>Servicios</h4><ul><li><a href="#">Transporte</a></li><li><a href="#">Informe del vehículo</a></li><li><a href="#">Pagos</a></li></ul></div>
+    <div><h4>Empresa</h4><ul><li><a href="#">Contacto</a></li><li><a href="#">Términos</a></li><li><a href="#">Privacidad</a></li></ul></div>
+  </div>
+  <details class="credits"><summary>Créditos de fotografías: Wikimedia Commons (licencias libres)</summary><p style="margin:8px 0 0">Fotos de referencia de cada modelo, no del lote subastado. Cada enlace muestra autor y licencia.</p><ul id="creditList"><li>Cargando…</li></ul></details>
+  <div class="foot-bottom"><span>© 2026 SUBASTAS ONLINE</span><span>Catálogo ficticio de referencia: lotes, precios y resultados no corresponden a vehículos reales.</span></div>
+</div></footer>
+
+<div id="modalRoot"></div>
+<div id="toastRoot" aria-live="polite"></div>
+
+<script>
+/* =========================================================
+   A. CATÁLOGO FICTICIO (50 modelos comunes en subastas de EE. UU.)
+   [marca, modelo, versión, año, tipo, forma, precio estándar USD, color]
+   ========================================================= */
+const CATALOG = [
+  ['Ford','F-150','XLT 4x4',2021,'pickup','pickup',21500,'#2F3A4A'],
+  ['Chevrolet','Silverado 1500','LT Crew Cab',2020,'pickup','pickup',19800,'#9AA1AA'],
+  ['RAM','1500','Big Horn',2021,'pickup','pickup',22400,'#7A1E22'],
+  ['Toyota','Camry','SE',2022,'sedan','sedan',14200,'#E3E6EA'],
+  ['Toyota','Corolla','LE',2021,'sedan','sedan',10900,'#5B6470'],
+  ['Honda','Civic','EX',2022,'sedan','sedan',12800,'#1F2A44'],
+  ['Honda','Accord','Sport',2021,'sedan','sedan',13600,'#A0161E'],
+  ['Honda','CR-V','EX AWD',2021,'suv','suv',14900,'#7C8590'],
+  ['Toyota','RAV4','XLE',2022,'suv','suv',17600,'#3E4C5E'],
+  ['Nissan','Rogue','SV',2021,'suv','suv',10700,'#C9CDD3'],
+  ['Nissan','Altima','2.5 SV',2020,'sedan','sedan',7400,'#2B3038'],
+  ['Chevrolet','Equinox','LT',2021,'suv','suv',9800,'#8A1C2B'],
+  ['Ford','Explorer','XLT',2020,'suv','suv',15200,'#1D2533'],
+  ['Ford','Escape','SE',2021,'suv','suv',9400,'#4F6B8A'],
+  ['Tesla','Model 3','Long Range',2021,'sedan','sedan',16900,'#ECEDEE'],
+  ['Tesla','Model Y','Long Range',2022,'suv','suv',22800,'#2B3038'],
+  ['Chevrolet','Malibu','LT',2020,'sedan','sedan',6900,'#6E7681'],
+  ['Ford','Fusion','SE',2019,'sedan','sedan',5800,'#B7BCC3'],
+  ['Nissan','Sentra','SV',2021,'sedan','sedan',7200,'#2847A8'],
+  ['Hyundai','Elantra','SEL',2022,'sedan','sedan',9600,'#D8D9DB'],
+  ['Hyundai','Sonata','SEL',2021,'sedan','sedan',10200,'#3A3F47'],
+  ['Hyundai','Tucson','SEL',2022,'suv','suv',13400,'#566A5A'],
+  ['Jeep','Grand Cherokee','Limited 4x4',2020,'suv','suv',16400,'#1F2328'],
+  ['Jeep','Wrangler Unlimited','Sport',2019,'suv','suv',19500,'#C26A1E'],
+  ['Toyota','Tacoma','TRD Sport',2020,'pickup','pickup',21900,'#8B9198'],
+  ['Toyota','Highlander','XLE',2020,'suv','suv',19700,'#ECEDEE'],
+  ['Honda','Pilot','EX-L',2019,'suv','suv',14600,'#4A3B33'],
+  ['Kia','Forte','LXS',2021,'sedan','sedan',7900,'#E3E5E8'],
+  ['Kia','Sorento','LX',2021,'suv','suv',12600,'#2E3640'],
+  ['Kia','Sportage','LX',2020,'suv','suv',8900,'#A33A2A'],
+  ['Hyundai','Santa Fe','SEL',2021,'suv','suv',13900,'#5B6470'],
+  ['Dodge','Charger','SXT',2020,'sedan','sedan',12400,'#1B1E23'],
+  ['Dodge','Durango','GT',2019,'suv','suv',15800,'#7A1E22'],
+  ['Chevrolet','Tahoe','LT',2019,'suv','suv',24900,'#1F2328'],
+  ['GMC','Sierra 1500','SLE',2020,'pickup','pickup',22600,'#D3D6DA'],
+  ['Subaru','Outback','Premium',2020,'suv','hatch',11800,'#38503F'],
+  ['Mazda','CX-5','Touring',2021,'suv','suv',13100,'#9B1C22'],
+  ['Jeep','Cherokee','Latitude',2019,'suv','suv',8600,'#6B7480'],
+  ['Jeep','Compass','Latitude',2021,'suv','suv',9900,'#E3E6EA'],
+  ['Kia','K5','GT-Line',2022,'sedan','sedan',13800,'#3D4250'],
+  ['Nissan','Versa','SV',2020,'sedan','sedan',5900,'#B03030'],
+  ['Ford','Mustang','EcoBoost',2020,'sedan','sedan',14300,'#1F4BCC'],
+  ['Ford','Edge','SEL',2019,'suv','suv',9700,'#59616B'],
+  ['Chevrolet','Traverse','LT',2020,'suv','suv',14800,'#2A3442'],
+  ['Toyota','Tundra','SR5 4x4',2019,'pickup','pickup',23800,'#C9CDD3'],
+  ['Honda','HR-V','LX',2021,'suv','hatch',10400,'#3B5A86'],
+  ['Cadillac','Escalade','Luxury',2019,'suv','suv',34500,'#121418'],
+  ['BMW','330i','Sedán',2020,'sedan','sedan',13900,'#2C3E5C'],
+  ['Mercedes-Benz','C 300','Sedán',2019,'sedan','sedan',12200,'#B7BCC3'],
+  ['Volkswagen','Jetta','S',2020,'sedan','sedan',6800,'#4A5059']
+];
+/* Artículo de Wikipedia (inglés) de donde sale la foto de cada modelo */
+const WIKI = {
+  'Ford F-150':'Ford F-Series','Chevrolet Silverado 1500':'Chevrolet Silverado','RAM 1500':'Ram pickup',
+  'Toyota Camry':'Toyota Camry','Toyota Corolla':'Toyota Corolla','Honda Civic':'Honda Civic','Honda Accord':'Honda Accord',
+  'Honda CR-V':'Honda CR-V','Toyota RAV4':'Toyota RAV4','Nissan Rogue':'Nissan Rogue','Nissan Altima':'Nissan Altima',
+  'Chevrolet Equinox':'Chevrolet Equinox','Ford Explorer':'Ford Explorer','Ford Escape':'Ford Escape',
+  'Tesla Model 3':'Tesla Model 3','Tesla Model Y':'Tesla Model Y','Chevrolet Malibu':'Chevrolet Malibu',
+  'Ford Fusion':'Ford Fusion (Americas)','Nissan Sentra':'Nissan Sentra','Hyundai Elantra':'Hyundai Elantra',
+  'Hyundai Sonata':'Hyundai Sonata','Hyundai Tucson':'Hyundai Tucson','Jeep Grand Cherokee':'Jeep Grand Cherokee',
+  'Jeep Wrangler Unlimited':'Jeep Wrangler','Toyota Tacoma':'Toyota Tacoma','Toyota Highlander':'Toyota Highlander',
+  'Honda Pilot':'Honda Pilot','Kia Forte':'Kia Forte','Kia Sorento':'Kia Sorento','Kia Sportage':'Kia Sportage',
+  'Hyundai Santa Fe':'Hyundai Santa Fe','Dodge Charger':'Dodge Charger','Dodge Durango':'Dodge Durango',
+  'Chevrolet Tahoe':'Chevrolet Tahoe','GMC Sierra 1500':'GMC Sierra','Subaru Outback':'Subaru Outback',
+  'Mazda CX-5':'Mazda CX-5','Jeep Cherokee':'Jeep Cherokee','Jeep Compass':'Jeep Compass','Kia K5':'Kia K5',
+  'Nissan Versa':'Nissan Versa','Ford Mustang':'Ford Mustang','Ford Edge':'Ford Edge','Chevrolet Traverse':'Chevrolet Traverse',
+  'Toyota Tundra':'Toyota Tundra','Honda HR-V':'Honda HR-V','Cadillac Escalade':'Cadillac Escalade',
+  'BMW 330i':'BMW 3 Series','Mercedes-Benz C 300':'Mercedes-Benz C-Class','Volkswagen Jetta':'Volkswagen Jetta'
+};
+/* =========================================================
+   B. GENERADOR DETERMINISTA DE LOTES (siempre los mismos datos)
+   ========================================================= */
+function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const R = rng(2026);
+const rnd = (a, b) => a + R() * (b - a);
+const pick = arr => arr[Math.floor(R() * arr.length)];
+const NOW = Date.now(), MIN = 6e4, H = 36e5, D = 864e5;
+const YARDS = ['Dallas, TX','Houston, TX','Atlanta, GA','Phoenix, AZ','Los Ángeles, CA','Miami, FL','Orlando, FL','Chicago, IL','Newark, NJ','Charlotte, NC','Denver, CO','Las Vegas, NV'];
+const DAMAGE = ['Daño frontal','Daño trasero','Daño lateral','Granizo','Abolladuras menores','Desgaste normal','Inundación','Vandalismo','Daño mecánico'];
+const TYPE_LABEL = { sedan:'Sedán', suv:'SUV', pickup:'Pickup' };
+
+const VEHICLES = CATALOG.map(([brand, model, trim, year, type, shape, price, color], i) => {
+  const sold = i % 4 === 3;
+  const damage = pick(DAMAGE);
+  const clean = ['Desgaste normal','Abolladuras menores','Granizo','Daño mecánico'].includes(damage) ? R() < .75 : R() < .2;
+  const miles = Math.round(((2026 - year) * rnd(9000, 14000)) / 100) * 100;
+  const ends = sold ? NOW - rnd(1, 20) * D : NOW + [rnd(8, 55) * MIN, rnd(1, 8) * H, rnd(1, 6) * D][i % 3];
+  const yard = pick(YARDS);
+  return {
+    lot: String(48210000 + i * 137 + Math.floor(R() * 90)),
+    brand, model, trim, year, type, shape, color, miles, yard,
+    state: yard.split(', ')[1], city: yard.split(', ')[0],
+    damage, title: clean ? 'Título limpio' : 'Título salvage',
+    runs: damage === 'Inundación' ? false : R() < .7,
+    keys: R() < .85,
+    bid: price,
+    retail: Math.round(price * rnd(1.55, 2.1) / 100) * 100,
+    bids: sold ? Math.floor(rnd(14, 60)) : Math.floor(rnd(0, 35)),
+    item: Math.floor(rnd(10, 999)),
+    row: 'ABCDEF'[Math.floor(R() * 6)],
+    published: NOW - rnd(2, 96) * H,
+    ends, sold,
+    status: sold ? (R() < .85 ? 'Vendido' : 'No vendido (reserva)') : 'Activo'
+  };
+});
+const isLive = v => !v.sold && v.ends - Date.now() < H && v.ends > Date.now();
+const active = () => VEHICLES.filter(v => !v.sold && v.ends > Date.now());
+
+/* =========================================================
+   C. UTILIDADES
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const usd = n => new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 }).format(n);
+const num = n => new Intl.NumberFormat('en-US').format(n);
+const dateF = t => new Date(t).toLocaleDateString('es-CO', { day:'numeric', month:'short', year:'numeric' });
+function left(ms){
+  if (ms <= 0) return 'cerrada';
+  const d = Math.floor(ms / D), h = Math.floor(ms % D / H), m = Math.floor(ms % H / MIN), s = Math.floor(ms % MIN / 1000);
+  if (d) return `${d} d ${h} h ${m} min`;
+  if (h) return `${h} h ${m} min`;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+const fullName = v => `${v.year} ${v.brand} ${v.model} ${v.trim}`;
+const watched = new Set();
+const star = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" stroke-linejoin="round"/></svg>';
+let toastT;
+function toast(msg){ clearTimeout(toastT); $('#toastRoot').innerHTML = `<div class="toast">${msg}</div>`; toastT = setTimeout(() => $('#toastRoot').innerHTML = '', 3200); }
+
+/* =========================================================
+   D. ILUSTRACIÓN DE RESPALDO (solo si la foto no carga)
+   ========================================================= */
+const SHAPES = {
+  sedan:{body:'M40 166 L40 146 Q42 134 60 130 L122 124 L162 98 Q172 92 187 92 L254 92 Q269 92 281 102 L312 126 L350 132 Q368 136 368 151 L368 166 Z',win:['M152 123 L174 104 Q180 100 190 100 L218 100 L218 123 Z','M226 100 L252 100 Q262 100 270 108 L285 123 L226 123 Z'],w:[106,296],r:27,y:166},
+  suv:{body:'M38 168 L38 124 Q40 110 58 108 L92 106 L118 76 Q124 70 136 70 L290 70 Q304 70 312 82 L330 108 L356 114 Q370 118 370 134 L370 168 Z',win:['M124 104 L140 80 L210 80 L210 104 Z','M218 80 L296 80 Q302 80 306 86 L318 104 L218 104 Z'],w:[108,300],r:30,y:168},
+  pickup:{body:'M30 168 L30 116 L180 116 L180 108 L196 78 Q200 72 210 72 L268 72 Q280 72 288 82 L310 108 L352 114 Q370 118 370 134 L370 168 Z',win:['M204 104 L214 82 L270 82 Q276 82 280 88 L292 104 Z'],w:[96,302],r:30,y:168},
+  hatch:{body:'M44 166 L44 118 Q46 104 62 98 L96 80 Q104 76 116 76 L230 76 Q246 76 258 90 L284 118 L344 126 Q364 130 364 148 L364 166 Z',win:['M102 110 L118 86 L180 86 L180 110 Z','M188 86 L236 86 Q244 86 250 94 L262 110 L188 110 Z'],w:[112,292],r:27,y:166}
+};
+let svgId = 0;
+function drawSVG(v){
+  const id = 'g' + (svgId++), s = SHAPES[v.shape] || SHAPES.sedan;
+  const wheel = x => `<circle cx="${x}" cy="${s.y}" r="${s.r}" fill="#1C1F24"/><circle cx="${x}" cy="${s.y}" r="${s.r * .56}" fill="#B3B9C1"/>`;
+  return `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EEF0F3"/><stop offset="1" stop-color="#C9CED4"/></linearGradient></defs><rect width="400" height="300" fill="url(#${id})"/><g transform="translate(0,30)"><ellipse cx="204" cy="${s.y + s.r - 2}" rx="172" ry="10" fill="#000" opacity=".17"/><path d="${s.body}" fill="${v.color}"/>${s.win.map(w => `<path d="${w}" fill="#2A3038"/>`).join('')}${s.w.map(wheel).join('')}</g></svg>`;
+}
+
+/* =========================================================
+   E. FOTOS REALES DE REFERENCIA (Wikipedia / Wikimedia Commons)
+   Requiere abrir la página en un navegador con internet.
+   ========================================================= */
+const PHOTOS = {};
+const photoKey = v => v.photoKey || `${v.brand} ${v.model}`;
+const imgTag = (k, alt) => `<img src="${PHOTOS[k].src}" alt="${alt}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`;
+/* FOTOS PROPIAS: tienen prioridad sobre Wikipedia.
+   Clave = número de lote o 'Marca Modelo'. Valor = ruta del archivo o URL.
+   Ejemplos:
+     '48210072': 'fotos/48210072.jpg',
+     'Toyota Camry': 'fotos/toyota-camry.jpg',
+     'Ford F-150': 'https://TU-PROYECTO.supabase.co/storage/v1/object/public/vehiculos/f150.jpg' */
+const LOCAL_PHOTOS = {
+};
+function photo(v, extra = ''){
+  const k = photoKey(v), alt = `Foto de referencia: ${v.brand} ${v.model}`;
+  const own = LOCAL_PHOTOS[v.lot] || LOCAL_PHOTOS[k];
+  if (own) return `<span class="ph" ${extra}>${drawSVG(v)}<img src="${own}" alt="${v.brand} ${v.model}" loading="lazy" onerror="this.remove()"></span>`;
+  return `<span class="ph" data-photo="${k}" data-alt="${alt}" ${extra}>${drawSVG(v)}${PHOTOS[k] ? imgTag(k, alt) : ''}</span>`;
+}
+async function loadPhotos(){
+  const titles = [...new Set(Object.values(WIKI))];
+  const url = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail|name&pithumbsize=800&pilicense=free&pilimit=50&titles=' + encodeURIComponent(titles.join('|'));
+  try {
+    const q = (await (await fetch(url)).json()).query || {};
+    const final = Object.fromEntries(titles.map(t => [t, t]));
+    (q.normalized || []).forEach(n => Object.keys(final).forEach(t => { if (final[t] === n.from) final[t] = n.to; }));
+    (q.redirects || []).forEach(r => Object.keys(final).forEach(t => { if (final[t] === r.from) final[t] = r.to; }));
+    const byTitle = {};
+    Object.values(q.pages || {}).forEach(p => { if (p.thumbnail) byTitle[p.title] = { src: p.thumbnail.source, file: p.pageimage }; });
+    Object.entries(WIKI).forEach(([k, t]) => { if (byTitle[final[t]]) PHOTOS[k] = byTitle[final[t]]; });
+    $$('[data-photo]').forEach(el => { const k = el.dataset.photo; if (PHOTOS[k] && !el.querySelector('img')) el.insertAdjacentHTML('beforeend', imgTag(k, el.dataset.alt)); });
+    const seen = new Set();
+    $('#creditList').innerHTML = Object.entries(PHOTOS).filter(([, p]) => !seen.has(p.file) && seen.add(p.file))
+      .map(([k, p]) => `<li>${k}: <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.file)}" target="_blank" rel="noopener">${p.file.replace(/_/g, ' ')}</a></li>`).join('');
+  } catch (e) {
+    console.warn('Fotos no disponibles (sin internet o conexión bloqueada por el visor).', e);
+    $('#creditList').innerHTML = '<li>Sin conexión: se muestran ilustraciones.</li>';
+  }
+}
+
+/* =========================================================
+   F. HERO Y CATEGORÍAS
+   ========================================================= */
+function renderHero(){
+  const act = active();
+  $('#heroCount').textContent = VEHICLES.length;
+  $('#heroActive').textContent = act.length;
+  $('#liveCount').textContent = act.filter(isLive).length;
+  const a = VEHICLES.find(v => v.model === 'RAV4'), b = VEHICLES.find(v => v.model === 'Model 3');
+  $('#heroMedia').innerHTML = `<div class="hero-photo a">${photo(a)}<span class="tag">Foto de referencia</span></div><div class="hero-photo b">${photo(b)}</div>`;
+}
+const CATS = [
+  ['Pickups', 'type', 'pickup', { shape:'pickup', color:'#2F3A4A', photoKey:'Ford F-150' }],
+  ['SUV', 'type', 'suv', { shape:'suv', color:'#1F2A44', photoKey:'Toyota RAV4' }],
+  ['Sedanes', 'type', 'sedan', { shape:'sedan', color:'#A0161E', photoKey:'Toyota Camry' }],
+  ['Eléctricos', 'brand', 'Tesla', { shape:'sedan', color:'#ECEDEE', photoKey:'Tesla Model 3' }],
+  ['Título limpio', 'title', 'Título limpio', { shape:'suv', color:'#566A5A', photoKey:'Honda CR-V' }],
+  ['Arranca y anda', 'runs', true, { shape:'hatch', color:'#3B5A86', photoKey:'Honda Civic' }]
+];
+function renderCats(){
+  const act = active();
+  $('#cats').innerHTML = CATS.map(([label, key, val, v], i) => {
+    const n = act.filter(x => key === 'runs' ? x.runs : x[key] === val).length;
+    return `<button class="cat" onclick="applyCat(${i})">${photo({ ...v, brand:label, model:'' })}<div><strong>${label}</strong><small>${n} lotes activos</small></div></button>`;
+  }).join('');
+}
+function applyCat(i){
+  const [, key, val] = CATS[i];
+  resetAll(false);
+  if (key === 'runs') F.runs = true; else F[{ type:'types', brand:'brands', title:'titles' }[key]].add(val);
+  renderFilters(); renderResults(); $('#inventario').scrollIntoView();
+}
+
+/* =========================================================
+   G. FILTROS (barra lateral)
+   ========================================================= */
+const F = { runs:false, recent:false, liveOnly:false, watch:false, q:'',
+  titles:new Set(), brands:new Set(), types:new Set(), damages:new Set(), states:new Set(),
+  yearMin:'', yearMax:'', milesMax:'', priceMin:'', priceMax:'' };
+const SORT = { key:'ends', dir:1 };
+let page = 1, perPage = 20, view = 'list';
+const openGroups = new Set(['titles', 'brands']);
+const showAllBrands = { v:false };
+
+function facet(key, field){
+  const counts = {};
+  active().forEach(v => counts[v[field]] = (counts[v[field]] || 0) + 1);
+  return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+}
+function checkGroup(id, title, setKey, field, labelFn = x => x, limit = 0){
+  let opts = facet(setKey, field);
+  const more = limit && opts.length > limit && !showAllBrands.v;
+  if (more) opts = opts.slice(0, limit);
+  return `<details class="f-group" data-g="${id}" ${openGroups.has(id) ? 'open' : ''}>
+    <summary><span>${title}</span><span class="tools"><button class="reset" onclick="event.preventDefault();F.${setKey}.clear();refresh()">Limpiar</button><span class="pm"></span></span></summary>
+    <div class="f-body">${opts.map(([val, n]) => `<label class="ck"><input type="checkbox" data-set="${setKey}" value="${val}" ${F[setKey].has(val) ? 'checked' : ''}> ${labelFn(val)} <small>(${n})</small></label>`).join('')}
+    ${limit && facet(setKey, field).length > limit ? `<button class="f-more" onclick="showAllBrands.v=!showAllBrands.v;renderFilters()">${showAllBrands.v ? 'Ver menos' : 'Ver todas'}</button>` : ''}</div>
+  </details>`;
+}
+function rangeGroup(id, title, html){
+  return `<details class="f-group" data-g="${id}" ${openGroups.has(id) ? 'open' : ''}><summary><span>${title}</span><span class="tools"><span class="pm"></span></span></summary><div class="f-body">${html}</div></details>`;
+}
+function renderFilters(){
+  const years = []; for (let y = 2026; y >= 2015; y--) years.push(y);
+  const yOpt = sel => '<option value="">Cualquiera</option>' + years.map(y => `<option ${String(sel) === String(y) ? 'selected' : ''}>${y}</option>`).join('');
+  $('#filterBody').innerHTML = `
+    <div class="toggle-row"><span><b style="color:var(--brand)">✓ Arranca y anda</b> solamente</span><label class="switch"><input type="checkbox" data-toggle="runs" ${F.runs ? 'checked' : ''}><span></span></label></div>
+    <div class="toggle-row"><span>Recién agregados<br><small class="muted">Últimas 24 horas</small></span><label class="switch"><input type="checkbox" data-toggle="recent" ${F.recent ? 'checked' : ''}><span></span></label></div>
+    <div class="toggle-row"><span>Solo subastas en vivo</span><label class="switch"><input type="checkbox" data-toggle="liveOnly" ${F.liveOnly ? 'checked' : ''}><span></span></label></div>
+    <div class="toggle-row" style="padding-bottom:14px"><span>Mi lista de seguimiento</span><label class="switch"><input type="checkbox" data-toggle="watch" ${F.watch ? 'checked' : ''}><span></span></label></div>
+    ${checkGroup('titles', 'Tipo de título', 'titles', 'title')}
+    ${checkGroup('brands', 'Marca', 'brands', 'brand', x => x, 8)}
+    ${checkGroup('types', 'Tipo de vehículo', 'types', 'type', x => TYPE_LABEL[x])}
+    ${rangeGroup('year', 'Año', `<div class="row2"><select data-range="yearMin" aria-label="Año desde">${yOpt(F.yearMin)}</select><select data-range="yearMax" aria-label="Año hasta">${yOpt(F.yearMax)}</select></div>`)}
+    ${rangeGroup('miles', 'Odómetro', `<select data-range="milesMax" aria-label="Millas máximas"><option value="">Sin límite</option>${[25000, 50000, 75000, 100000].map(m => `<option value="${m}" ${String(F.milesMax) === String(m) ? 'selected' : ''}>Hasta ${num(m)} mi</option>`).join('')}</select>`)}
+    ${checkGroup('damages', 'Daño principal', 'damages', 'damage')}
+    ${checkGroup('states', 'Ubicación (estado)', 'states', 'state')}
+    ${rangeGroup('price', 'Puja actual (USD)', `<div class="row2"><input type="number" placeholder="Mínimo" data-range="priceMin" value="${F.priceMin}" aria-label="Precio mínimo"><input type="number" placeholder="Máximo" data-range="priceMax" value="${F.priceMax}" aria-label="Precio máximo"></div>`)}
+  `;
+  $$('#filterBody details').forEach(d => d.addEventListener('toggle', () => d.open ? openGroups.add(d.dataset.g) : openGroups.delete(d.dataset.g)));
+  $$('#filterBody [data-set]').forEach(el => el.onchange = () => { el.checked ? F[el.dataset.set].add(el.value) : F[el.dataset.set].delete(el.value); page = 1; renderResults(); });
+  $$('#filterBody [data-toggle]').forEach(el => el.onchange = () => { F[el.dataset.toggle] = el.checked; page = 1; renderResults(); });
+  $$('#filterBody [data-range]').forEach(el => el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => { F[el.dataset.range] = el.value; page = 1; renderResults(); }));
+}
+function refresh(){ page = 1; renderFilters(); renderResults(); }
+function resetAll(render = true){
+  Object.assign(F, { runs:false, recent:false, liveOnly:false, watch:false, q:'', yearMin:'', yearMax:'', milesMax:'', priceMin:'', priceMax:'' });
+  ['titles', 'brands', 'types', 'damages', 'states'].forEach(k => F[k].clear());
+  page = 1; if (render) refresh();
+}
+function setToggle(k, v){ resetAll(false); F[k] = v; refresh(); }
+function showWatchlist(){ setToggle('watch', true); }
+function quickSearch(q){ resetAll(false); F.q = q.trim(); refresh(); $('#inventario').scrollIntoView(); }
+
+function filtered(){
+  const now = Date.now();
+  return active().filter(v => {
+    if (F.runs && !v.runs) return false;
+    if (F.recent && now - v.published > D) return false;
+    if (F.liveOnly && !isLive(v)) return false;
+    if (F.watch && !watched.has(v.lot)) return false;
+    if (F.titles.size && !F.titles.has(v.title)) return false;
+    if (F.brands.size && !F.brands.has(v.brand)) return false;
+    if (F.types.size && !F.types.has(v.type)) return false;
+    if (F.damages.size && !F.damages.has(v.damage)) return false;
+    if (F.states.size && !F.states.has(v.state)) return false;
+    if (F.yearMin && v.year < +F.yearMin) return false;
+    if (F.yearMax && v.year > +F.yearMax) return false;
+    if (F.milesMax && v.miles > +F.milesMax) return false;
+    if (F.priceMin && v.bid < +F.priceMin) return false;
+    if (F.priceMax && v.bid > +F.priceMax) return false;
+    if (F.q){ const hay = `${v.lot} ${fullName(v)} ${TYPE_LABEL[v.type]} ${v.damage} ${v.title} ${v.yard}`.toLowerCase(); if (!F.q.toLowerCase().split(/\s+/).every(w => hay.includes(w))) return false; }
+    return true;
+  }).sort((a, b) => (a[SORT.key] > b[SORT.key] ? 1 : -1) * SORT.dir);
+}
+
+/* =========================================================
+   H. RESULTADOS (lista tipo tabla o cuadrícula)
+   ========================================================= */
+function saleInfo(v){
+  const ms = v.ends - Date.now();
+  return isLive(v) ? `<div class="sale-live">En vivo ahora</div>` : `<div class="sale-next" data-ends="${v.ends}" data-prefix="Subasta en ">Subasta en ${left(ms)}</div>`;
+}
+function bidButtons(v){
+  return isLive(v)
+    ? `<button class="btn btn-live" onclick="openLot('${v.lot}')">Unirse a la subasta</button>`
+    : `<button class="btn btn-brand" onclick="openLot('${v.lot}')">Ofertar ahora</button><button class="btn btn-outline" onclick="openLot('${v.lot}')">Detalles</button>`;
+}
+const watchBtn = v => `<button class="watch" data-watch="${v.lot}" aria-pressed="${watched.has(v.lot)}">${star}${watched.has(v.lot) ? 'Siguiendo' : 'Seguir'}</button>`;
+function rowHTML(v){
+  return `<div class="r-row r-grid">
+    <div class="c-img">${photo(v, `onclick="openLot('${v.lot}')"`)}</div>
+    <div class="c-lot">
+      <div class="v-name" onclick="openLot('${v.lot}')">${fullName(v)}</div>
+      <div class="lotno">Lote # <a href="#" onclick="event.preventDefault();openLot('${v.lot}')">${v.lot}</a></div>
+      <div class="lot-tools">${watchBtn(v)}${v.runs ? '<span class="badge badge-ok">Arranca y anda</span>' : ''}</div>
+    </div>
+    <div class="c-veh"><span class="k">Odómetro</span><span class="v">${num(v.miles)} mi (real)</span><span class="k">Valor comercial estimado</span><span class="v">${usd(v.retail)} <small class="muted">USD</small></span></div>
+    <div class="c-cond"><span class="v">${v.title} (${v.state})</span><span class="v">${v.damage}</span><span class="v">${v.keys ? 'Llaves disponibles' : 'Sin llaves'}</span></div>
+    <div class="c-sale"><a class="yard" href="#" onclick="event.preventDefault();F.states.clear();F.states.add('${v.state}');refresh()">${v.state} - ${v.city} ›</a><span class="v muted" style="margin:4px 0 0">${v.row} / ${v.item}</span><span class="v muted" style="margin:0">Ítem #: ${v.item}</span>${saleInfo(v)}</div>
+    <div class="c-bids"><span class="k">Puja actual:</span><div class="bid-amt">${usd(v.bid)} <small>USD</small></div>${bidButtons(v)}</div>
+  </div>`;
+}
+function cardHTML(v){
+  return `<article class="card">${photo(v, `onclick="openLot('${v.lot}')"`)}
+    <div class="card-b">
+      <div class="v-name" onclick="openLot('${v.lot}')">${fullName(v)}</div>
+      <div class="card-line"><span>Lote # ${v.lot}</span><span>${num(v.miles)} mi</span></div>
+      <div class="card-line"><span>${v.title}</span><span>${v.damage}</span></div>
+      <div class="card-line"><span class="yard" style="font-size:.85rem">${v.state} - ${v.city}</span></div>
+      ${saleInfo(v)}
+      <div class="card-line" style="align-items:end;margin-top:auto"><div><span class="k">Puja actual</span><b style="font-size:1.15rem">${usd(v.bid)}</b></div>${watchBtn(v)}</div>
+      ${bidButtons(v).replace(/class="btn /g, 'class="btn btn-block ')}
+    </div></article>`;
+}
+function renderChips(){
+  const chips = [];
+  if (F.q) chips.push(['q', `“${F.q}”`]);
+  if (F.runs) chips.push(['runs', 'Arranca y anda']);
+  if (F.recent) chips.push(['recent', 'Últimas 24 h']);
+  if (F.liveOnly) chips.push(['liveOnly', 'En vivo']);
+  if (F.watch) chips.push(['watch', 'Mi seguimiento']);
+  ['titles', 'brands', 'types', 'damages', 'states'].forEach(k => F[k].forEach(val => chips.push([k + ':' + val, k === 'types' ? TYPE_LABEL[val] : val])));
+  $('#activeChips').innerHTML = chips.map(([k, l]) => `<button class="achip" data-chip="${k}">${l} ✕</button>`).join('');
+  $$('[data-chip]').forEach(b => b.onclick = () => {
+    const k = b.dataset.chip;
+    if (k.includes(':')){ const [s, ...rest] = k.split(':'); F[s].delete(rest.join(':')); }
+    else F[k] = k === 'q' ? '' : false;
+    refresh();
+  });
+}
+function renderResults(){
+  const list = filtered(), pages = Math.max(1, Math.ceil(list.length / perPage));
+  page = Math.min(page, pages);
+  const slice = list.slice((page - 1) * perPage, page * perPage);
+  const brandTxt = F.brands.size === 1 ? [...F.brands][0] + ' ' : '';
+  $('#resultsTitle').innerHTML = `<b>${list.length}</b> vehículos ${brandTxt}usados y siniestrados en subasta`;
+  $('#crumbExtra').textContent = brandTxt ? '/ ' + brandTxt.trim() : '';
+  $('#applyCount').textContent = list.length;
+  renderChips();
+  if (!list.length) $('#resultsList').innerHTML = `${view === 'list' ? headHTML() : ''}<div class="empty">Ningún vehículo coincide con los filtros. <button class="f-more" onclick="resetAll()">Limpiar filtros</button></div>`;
+  else if (view === 'grid') $('#resultsList').innerHTML = `<div class="cards">${slice.map(cardHTML).join('')}</div>`;
+  else $('#resultsList').innerHTML = headHTML() + slice.map(rowHTML).join('');
+  $('#pageInfo').textContent = list.length ? `Mostrando ${(page - 1) * perPage + 1} a ${Math.min(page * perPage, list.length)} de ${list.length}` : '';
+  $('#pages').innerHTML = pages > 1 ? Array.from({ length:pages }, (_, i) => `<button class="btn btn-sm ${i + 1 === page ? 'btn-brand' : 'btn-line'}" data-page="${i + 1}">${i + 1}</button>`).join('') : '';
+  $$('[data-page]').forEach(b => b.onclick = () => { page = +b.dataset.page; renderResults(); $('#inventario').scrollIntoView(); });
+}
+const headHTML = () => `<div class="r-head r-grid"><div>Imagen</div><div>Info del lote</div><div>Info del vehículo</div><div>Condición</div><div>Info de venta</div><div>Ofertas</div></div>`;
+function toggleView(){ view = view === 'list' ? 'grid' : 'list'; $('#viewBtn').textContent = view === 'list' ? 'Vista de cuadrícula' : 'Vista de lista'; renderResults(); }
+function exportCSV(){
+  const rows = [['Lote','Año','Marca','Modelo','Versión','Millas','Título','Daño','Patio','Puja USD','Valor estimado USD','Cierre']]
+    .concat(filtered().map(v => [v.lot, v.year, v.brand, v.model, v.trim, v.miles, v.title, v.damage, v.yard, v.bid, v.retail, new Date(v.ends).toISOString()]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type:'text/csv' })); a.download = 'inventario-subastas.csv'; a.click();
+  toast('CSV exportado.');
+}
+
+/* =========================================================
+   I. DETALLE DEL LOTE (modal con oferta simulada)
+   ========================================================= */
+const step = v => v.bid < 5000 ? 50 : v.bid < 20000 ? 100 : 250;
+function openLot(lot){
+  const v = VEHICLES.find(x => x.lot === lot); if (!v) return;
+  const min = v.bid + step(v);
+  $('#modalRoot').innerHTML = `<div class="modal-back" onclick="if(event.target===this)closeLot()"><div class="modal" role="dialog" aria-modal="true" style="position:relative">
+    <button class="m-close" onclick="closeLot()" aria-label="Cerrar">✕</button>
+    <div>${photo(v)}<p class="muted" style="font-size:.8rem;padding:8px 12px;margin:0">Foto de referencia del modelo, no del lote.</p></div>
+    <div class="m-body">
+      <div><div class="v-name" style="color:var(--brand);font-weight:700;font-size:1.25rem;text-transform:uppercase">${fullName(v)}</div><div class="muted">Lote # ${v.lot}, ${v.state} - ${v.city}</div></div>
+      <div class="facts">
+        <div><span class="k">Odómetro</span>${num(v.miles)} mi</div><div><span class="k">Título</span>${v.title}</div>
+        <div><span class="k">Daño principal</span>${v.damage}</div><div><span class="k">Llaves</span>${v.keys ? 'Sí' : 'No'}</div>
+        <div><span class="k">Arranca y anda</span>${v.runs ? 'Sí' : 'No verificado'}</div><div><span class="k">Tipo</span>${TYPE_LABEL[v.type]}</div>
+        <div><span class="k">Valor estimado</span>${usd(v.retail)}</div><div><span class="k">Cierre</span><span data-ends="${v.ends}">${left(v.ends - Date.now())}</span></div>
+      </div>
+      ${v.sold ? `<div class="bidbox"><span class="k">Resultado</span><b>${v.status}: ${usd(v.bid)}</b></div>` : `
+      <div class="bidbox">
+        <span class="k">Puja actual (${v.bids} ofertas)</span><div class="bid-amt" id="mBid">${usd(v.bid)} <small>USD</small></div>
+        <label class="k" for="mAmt">Tu oferta (mínimo ${usd(min)})</label>
+        <input id="mAmt" type="number" min="${min}" step="${step(v)}" value="${min}">
+        <button class="btn ${isLive(v) ? 'btn-live' : 'btn-brand'} btn-block" onclick="placeBid('${v.lot}')">${isLive(v) ? 'Ofertar en vivo' : 'Enviar oferta'}</button>
+        <small class="muted">Demostración: la oferta no es vinculante.</small>
+      </div>`}
+    </div></div></div>`;
+  loadMissing();
+}
+function closeLot(){ $('#modalRoot').innerHTML = ''; }
+function placeBid(lot){
+  const v = VEHICLES.find(x => x.lot === lot), amt = +$('#mAmt').value, min = v.bid + step(v);
+  if (!amt || amt < min) return toast(`La oferta mínima es ${usd(min)}.`);
+  v.bid = amt; v.bids++; watched.add(v.lot);
+  closeLot(); renderResults(); toast(`Oferta de ${usd(amt)} registrada en el lote ${lot}.`);
+}
+function loadMissing(){ $$('[data-photo]').forEach(el => { const k = el.dataset.photo; if (PHOTOS[k] && !el.querySelector('img')) el.insertAdjacentHTML('beforeend', imgTag(k, el.dataset.alt)); }); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeLot(); $$('.nav li.open').forEach(x => x.classList.remove('open')); } });
+
+/* =========================================================
+   J. SUBASTAS DE HOY, PATIOS Y RESULTADOS
+   ========================================================= */
+function renderToday(){
+  const act = active();
+  const yards = ['Dallas, TX','Atlanta, GA','Phoenix, AZ','Los Ángeles, CA'];
+  $('#todayList').innerHTML = yards.map((y, i) => {
+    const n = act.filter(v => v.yard === y).length, live = i < 2;
+    return `<div class="list-row"><div><strong>${y}</strong><small>${n} lotes de este catálogo</small></div><span>${['10:00 a. m. CT','11:00 a. m. ET','12:00 p. m. MT','1:00 p. m. PT'][i]}</span><span class="badge ${live ? 'badge-ok' : ''}">${live ? 'En vivo' : 'Próxima'}</span><button class="btn ${live ? 'btn-live' : 'btn-line'} btn-sm" onclick="F.states.clear();F.states.add('${y.split(', ')[1]}');refresh();$('#inventario').scrollIntoView()">${live ? 'Unirse' : 'Ver lotes'}</button></div>`;
+  }).join('');
+  const st = facet('states', 'state').slice(0, 5);
+  $('#locList').innerHTML = st.map(([s, n]) => `<div class="list-row" style="grid-template-columns:1fr auto"><div><strong>${[...new Set(act.filter(v => v.state === s).map(v => v.city))].join(', ')} (${s})</strong><small>Lun a vie, 8:00 a 16:30, ${n} lotes activos</small></div><button class="btn btn-line btn-sm" onclick="F.states.clear();F.states.add('${s}');refresh();$('#inventario').scrollIntoView()">Ver inventario</button></div>`).join('');
+}
+function renderSold(){
+  const sold = VEHICLES.filter(v => v.sold).sort((a, b) => b.ends - a.ends);
+  $('#soldTable').innerHTML = `<div class="table-wrap"><table><thead><tr><th>Imagen</th><th>Lote</th><th>Vehículo</th><th>Patio</th><th>Daño</th><th>Fecha</th><th>Ofertas</th><th>Precio final</th><th>Resultado</th></tr></thead><tbody>
+    ${sold.map(v => `<tr><td><div class="thumb">${photo(v)}</div></td><td><a href="#" style="color:var(--brand);font-weight:600" onclick="event.preventDefault();openLot('${v.lot}')">${v.lot}</a></td><td><b>${v.year} ${v.brand} ${v.model}</b><br><small class="muted">${v.trim}, ${num(v.miles)} mi</small></td><td>${v.yard}</td><td>${v.damage}</td><td>${dateF(v.ends)}</td><td>${v.bids}</td><td><b>${usd(v.bid)}</b></td><td><span class="badge ${v.status === 'Vendido' ? 'badge-ok' : ''}">${v.status}</span></td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+/* =========================================================
+   K. EVENTOS GENERALES
+   ========================================================= */
+$$('.nav li > button.nav-link').forEach(btn => btn.addEventListener('click', e => {
+  e.stopPropagation();
+  const li = btn.parentElement, open = !li.classList.contains('open');
+  $$('.nav li.open').forEach(x => x.classList.remove('open'));
+  li.classList.toggle('open', open); btn.setAttribute('aria-expanded', open);
+}));
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav')) $$('.nav li.open').forEach(x => x.classList.remove('open'));
+  const w = e.target.closest('[data-watch]'); if (!w) return;
+  const lot = w.dataset.watch; watched.has(lot) ? watched.delete(lot) : watched.add(lot);
+  $$(`[data-watch="${lot}"]`).forEach(x => { x.setAttribute('aria-pressed', watched.has(lot)); x.innerHTML = star + (watched.has(lot) ? 'Siguiendo' : 'Seguir'); });
+  if (F.watch) renderResults();
+});
+$('#menuToggle').onclick = () => { const o = $('#nav').classList.toggle('open'); $('#menuToggle').setAttribute('aria-expanded', o); };
+$('#sortSel').onchange = e => { const [k, d] = e.target.value.split(':'); SORT.key = k; SORT.dir = +d; renderResults(); };
+$('#perPage').onchange = e => { perPage = +e.target.value; page = 1; renderResults(); };
+setInterval(() => $$('[data-ends]').forEach(el => { el.textContent = (el.dataset.prefix || '') + left(+el.dataset.ends - Date.now()); }), 1000);
+
+/* =========================================================
+   L. INICIO
+   ========================================================= */
+renderHero();
+renderCats();
+renderFilters();
+renderResults();
+renderToday();
+renderSold();
+loadPhotos();
+</script>
+</body>
+</html>

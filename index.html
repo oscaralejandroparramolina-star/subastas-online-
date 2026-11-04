@@ -654,7 +654,7 @@ MODELS.forEach(([brand, model, type, shape, basePrice, color], mi) => {
       runs: damage === 'Inundación' ? false : R() < .7,
       keys: R() < .85,
       bid: price,
-      retail: Math.round(price * rnd(1.4, 1.9) / 50) * 50,
+      retail: Math.max(price + 500, Math.round((price * rnd(1.4, 1.9) - rnd(1000, 2000)) / 50) * 50),
       bids: sold ? Math.floor(rnd(14, 60)) : Math.floor(rnd(0, 35)),
       item: Math.floor(rnd(10, 999)),
       row: 'ABCDEF'[Math.floor(R() * 6)],
@@ -750,20 +750,44 @@ async function fetchTitlesBatch(batch){
   Object.values(q.pages || {}).forEach(p => { if (p.thumbnail) byTitle[p.title] = { src: p.thumbnail.source, file: p.pageimage }; });
   return { final, byTitle };
 }
+/* Respaldo: busca una foto real del modelo en Wikimedia Commons (licencia libre)
+   cuando Wikipedia no tiene imagen del artículo (sucede sobre todo con los UTV). */
+async function commonsPhoto(query){
+  const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*'
+    + '&generator=search&gsrnamespace=6&gsrlimit=10&gsrsearch=' + encodeURIComponent(query + ' filetype:bitmap')
+    + '&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=800';
+  const q = (await (await fetch(url)).json()).query || {};
+  const pages = Object.values(q.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+  for (const pg of pages){
+    const ii = pg.imageinfo && pg.imageinfo[0];
+    const bad = /logo|icon|map|diagram|engine|wheel|interior|dashboard|badge|emblem|seat|part/i.test(pg.title);
+    if (ii && ii.thumburl && /jpe?g|png/i.test(ii.mime || '') && (ii.width || 801) > 500 && !bad)
+      return { src: ii.thumburl, file: pg.title.replace(/^File:/, '') };
+  }
+  return null;
+}
+function applyPhotos(){
+  $$('[data-photo]').forEach(el => { const k = el.dataset.photo; if (PHOTOS[k] && !el.querySelector('img')) el.insertAdjacentHTML('beforeend', imgTag(k, el.dataset.alt)); });
+  const seen = new Set();
+  $('#creditList').innerHTML = Object.entries(PHOTOS).filter(([, p]) => !seen.has(p.file) && seen.add(p.file))
+    .map(([k, p]) => `<li>${k}: <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.file)}" target="_blank" rel="noopener">${p.file.replace(/_/g, ' ')}</a></li>`).join('') || '<li>Sin fotos disponibles.</li>';
+}
 async function loadPhotos(){
-  const titles = [...new Set(Object.values(WIKI))];
-  // La API de Wikipedia solo acepta 50 títulos por consulta (anónima): se divide en lotes.
-  const BATCH = 50;
-  const batches = []; for (let i = 0; i < titles.length; i += BATCH) batches.push(titles.slice(i, i + BATCH));
+  const wikiTitles = [...new Set(Object.values(WIKI))];
+  const BATCH = 50;  // Wikipedia solo acepta 50 títulos por consulta
+  const batches = []; for (let i = 0; i < wikiTitles.length; i += BATCH) batches.push(wikiTitles.slice(i, i + BATCH));
   try {
+    // Etapa 1: imagen principal del artículo de Wikipedia
     const results = await Promise.all(batches.map(b => fetchTitlesBatch(b).catch(() => ({ final:{}, byTitle:{} }))));
     const final = Object.assign({}, ...results.map(r => r.final));
     const byTitle = Object.assign({}, ...results.map(r => r.byTitle));
     Object.entries(WIKI).forEach(([k, t]) => { if (byTitle[final[t]]) PHOTOS[k] = byTitle[final[t]]; });
-    $$('[data-photo]').forEach(el => { const k = el.dataset.photo; if (PHOTOS[k] && !el.querySelector('img')) el.insertAdjacentHTML('beforeend', imgTag(k, el.dataset.alt)); });
-    const seen = new Set();
-    $('#creditList').innerHTML = Object.entries(PHOTOS).filter(([, p]) => !seen.has(p.file) && seen.add(p.file))
-      .map(([k, p]) => `<li>${k}: <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.file)}" target="_blank" rel="noopener">${p.file.replace(/_/g, ' ')}</a></li>`).join('') || '<li>Sin fotos disponibles.</li>';
+    applyPhotos();
+    // Etapa 2: para cada modelo sin foto (p. ej. UTV), buscar en Wikimedia Commons
+    const allKeys = [...new Set(VEHICLES.map(v => `${v.brand} ${v.model}`))];
+    const missing = allKeys.filter(k => !PHOTOS[k] && !LOCAL_PHOTOS[k]);
+    await Promise.all(missing.map(async k => { try { const ph = await commonsPhoto(k); if (ph) PHOTOS[k] = ph; } catch (e) {} }));
+    applyPhotos();
   } catch (e) {
     console.warn('Fotos no disponibles (sin internet o conexión bloqueada).', e);
     $('#creditList').innerHTML = '<li>Sin conexión: se muestran ilustraciones.</li>';

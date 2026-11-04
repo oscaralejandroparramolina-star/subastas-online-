@@ -740,23 +740,32 @@ function photo(v, extra = ''){
   if (own) return `<span class="ph" ${extra}>${drawSVG(v)}<img src="${own}" alt="${v.brand} ${v.model}" loading="lazy" onerror="this.remove()"></span>`;
   return `<span class="ph" data-photo="${k}" data-alt="${alt}" ${extra}>${drawSVG(v)}${PHOTOS[k] ? imgTag(k, alt) : ''}</span>`;
 }
+async function fetchTitlesBatch(batch){
+  const url = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail|name&pithumbsize=800&pilicense=free&pilimit=50&titles=' + encodeURIComponent(batch.join('|'));
+  const q = (await (await fetch(url)).json()).query || {};
+  const final = Object.fromEntries(batch.map(t => [t, t]));
+  (q.normalized || []).forEach(n => Object.keys(final).forEach(t => { if (final[t] === n.from) final[t] = n.to; }));
+  (q.redirects || []).forEach(r => Object.keys(final).forEach(t => { if (final[t] === r.from) final[t] = r.to; }));
+  const byTitle = {};
+  Object.values(q.pages || {}).forEach(p => { if (p.thumbnail) byTitle[p.title] = { src: p.thumbnail.source, file: p.pageimage }; });
+  return { final, byTitle };
+}
 async function loadPhotos(){
   const titles = [...new Set(Object.values(WIKI))];
-  const url = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail|name&pithumbsize=800&pilicense=free&pilimit=50&titles=' + encodeURIComponent(titles.join('|'));
+  // La API de Wikipedia solo acepta 50 títulos por consulta (anónima): se divide en lotes.
+  const BATCH = 50;
+  const batches = []; for (let i = 0; i < titles.length; i += BATCH) batches.push(titles.slice(i, i + BATCH));
   try {
-    const q = (await (await fetch(url)).json()).query || {};
-    const final = Object.fromEntries(titles.map(t => [t, t]));
-    (q.normalized || []).forEach(n => Object.keys(final).forEach(t => { if (final[t] === n.from) final[t] = n.to; }));
-    (q.redirects || []).forEach(r => Object.keys(final).forEach(t => { if (final[t] === r.from) final[t] = r.to; }));
-    const byTitle = {};
-    Object.values(q.pages || {}).forEach(p => { if (p.thumbnail) byTitle[p.title] = { src: p.thumbnail.source, file: p.pageimage }; });
+    const results = await Promise.all(batches.map(b => fetchTitlesBatch(b).catch(() => ({ final:{}, byTitle:{} }))));
+    const final = Object.assign({}, ...results.map(r => r.final));
+    const byTitle = Object.assign({}, ...results.map(r => r.byTitle));
     Object.entries(WIKI).forEach(([k, t]) => { if (byTitle[final[t]]) PHOTOS[k] = byTitle[final[t]]; });
     $$('[data-photo]').forEach(el => { const k = el.dataset.photo; if (PHOTOS[k] && !el.querySelector('img')) el.insertAdjacentHTML('beforeend', imgTag(k, el.dataset.alt)); });
     const seen = new Set();
     $('#creditList').innerHTML = Object.entries(PHOTOS).filter(([, p]) => !seen.has(p.file) && seen.add(p.file))
-      .map(([k, p]) => `<li>${k}: <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.file)}" target="_blank" rel="noopener">${p.file.replace(/_/g, ' ')}</a></li>`).join('');
+      .map(([k, p]) => `<li>${k}: <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.file)}" target="_blank" rel="noopener">${p.file.replace(/_/g, ' ')}</a></li>`).join('') || '<li>Sin fotos disponibles.</li>';
   } catch (e) {
-    console.warn('Fotos no disponibles (sin internet o conexión bloqueada por el visor).', e);
+    console.warn('Fotos no disponibles (sin internet o conexión bloqueada).', e);
     $('#creditList').innerHTML = '<li>Sin conexión: se muestran ilustraciones.</li>';
   }
 }

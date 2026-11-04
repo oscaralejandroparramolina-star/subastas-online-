@@ -565,18 +565,18 @@ const MODELS = [
    Si un modelo no tiene artículo con foto libre, queda la ilustración. */
 const WIKI = {
   'Honda Civic':'Honda Civic','Toyota Corolla':'Toyota Corolla','Nissan Sentra':'Nissan Sentra',
-  'Hyundai Elantra':'Hyundai Elantra','Kia Forte':'Kia Forte','Mazda 3':'Mazda3','Chevrolet Malibu':'Chevrolet Malibu',
+  'Hyundai Elantra':'Hyundai Elantra','Kia Forte':'Kia Forte','Mazda 3':'Mazda3','Chevrolet Malibu':'Chevrolet Malibu (ninth generation)',
   'Volkswagen Jetta':'Volkswagen Jetta','Subaru Impreza':'Subaru Impreza',
   'Toyota Camry':'Toyota Camry','Honda Accord':'Honda Accord','Nissan Altima':'Nissan Altima',
   'Hyundai Sonata':'Hyundai Sonata','Kia K5':'Kia K5',
   'BMW 330i':'BMW 3 Series','Mercedes-Benz C 300':'Mercedes-Benz C-Class','Audi A4':'Audi A4',
-  'Dodge Charger':'Dodge Charger','Ford Mustang':'Ford Mustang','Chevrolet Camaro':'Chevrolet Camaro',
+  'Dodge Charger':'Dodge Charger','Ford Mustang':'Ford Mustang (seventh generation)','Chevrolet Camaro':'Chevrolet Camaro (sixth generation)',
   'Tesla Model 3':'Tesla Model 3','Tesla Model Y':'Tesla Model Y','Ford Mustang Mach-E':'Ford Mustang Mach-E',
   'Hyundai Ioniq 5':'Hyundai Ioniq 5','Kia EV6':'Kia EV6','Chevrolet Bolt EUV':'Chevrolet Bolt EV',
   'Honda CR-V':'Honda CR-V','Toyota RAV4':'Toyota RAV4','Nissan Rogue':'Nissan Rogue','Mazda CX-5':'Mazda CX-5',
   'Hyundai Tucson':'Hyundai Tucson','Kia Sportage':'Kia Sportage','Chevrolet Equinox':'Chevrolet Equinox',
   'Ford Escape':'Ford Escape','Subaru Forester':'Subaru Forester','Volkswagen Tiguan':'Volkswagen Tiguan',
-  'Jeep Compass':'Jeep Compass','Jeep Cherokee':'Jeep Cherokee','Honda HR-V':'Honda HR-V',
+  'Jeep Compass':'Jeep Compass','Jeep Cherokee':'Jeep Cherokee (KL)','Honda HR-V':'Honda HR-V',
   'Toyota Highlander':'Toyota Highlander','Honda Pilot':'Honda Pilot','Jeep Grand Cherokee':'Jeep Grand Cherokee',
   'Hyundai Santa Fe':'Hyundai Santa Fe','Kia Sorento':'Kia Sorento','Ford Explorer':'Ford Explorer',
   'Chevrolet Traverse':'Chevrolet Traverse','Mazda CX-50':'Mazda CX-50','Hyundai Palisade':'Hyundai Palisade',
@@ -586,17 +586,16 @@ const WIKI = {
   'Toyota Sequoia':'Toyota Sequoia','Cadillac Escalade':'Cadillac Escalade','Jeep Wagoneer':'Jeep Wagoneer',
   'BMW X5':'BMW X5','Mercedes-Benz GLE':'Mercedes-Benz GLE-Class','Audi Q5':'Audi Q5','Lexus RX':'Lexus RX',
   'Acura MDX':'Acura MDX',
-  'Toyota Tacoma':'Toyota Tacoma','Ford Ranger':'Ford Ranger','Chevrolet Colorado':'Chevrolet Colorado',
+  'Toyota Tacoma':'Toyota Tacoma','Ford Ranger':'Ford Ranger (T6)','Chevrolet Colorado':'Chevrolet Colorado',
   'Jeep Gladiator':'Jeep Gladiator (JT)','Honda Ridgeline':'Honda Ridgeline',
   'Ford F-150':'Ford F-Series','Chevrolet Silverado 1500':'Chevrolet Silverado','RAM 1500':'Ram pickup',
   'GMC Sierra 1500':'GMC Sierra','Toyota Tundra':'Toyota Tundra','Nissan Titan':'Nissan Titan',
   'Ford F-250':'Ford Super Duty','RAM 2500':'Ram pickup','Chevrolet Silverado 2500HD':'Chevrolet Silverado',
-  'Jeep Wrangler':'Jeep Wrangler','Jeep Wrangler Unlimited':'Jeep Wrangler','Ford Bronco':'Ford Bronco',
+  'Jeep Wrangler':'Jeep Wrangler','Jeep Wrangler Unlimited':'Jeep Wrangler','Ford Bronco':'Ford Bronco (sixth generation)',
   'Toyota 4Runner':'Toyota 4Runner',
-  'Honda Odyssey':'Honda Odyssey','Chrysler Pacifica':'Chrysler Pacifica (minivan)','Toyota Sienna':'Toyota Sienna',
+  'Honda Odyssey':'Honda Odyssey (North America)','Chrysler Pacifica':'Chrysler Pacifica (minivan)','Toyota Sienna':'Toyota Sienna',
   'Kia Carnival':'Kia Carnival',
-  'Polaris RZR Pro XP':'Polaris RZR','Polaris RZR XP 1000':'Polaris RZR','Polaris Ranger XP 1000':'Polaris RZR',
-  'Polaris General XP 1000':'Polaris RZR','Can-Am Maverick X3':'Can-Am Maverick X3','Kawasaki Teryx KRX':'Kawasaki Teryx'
+  'Polaris RZR Pro XP':'Polaris RZR','Polaris RZR XP 1000':'Polaris RZR'
 };
 
 /* =========================================================
@@ -754,7 +753,7 @@ async function fetchTitlesBatch(batch){
    cuando Wikipedia no tiene imagen del artículo (sucede sobre todo con los UTV). */
 /* Palabras que delatan un archivo que NO es una foto del vehículo
    (cuadros, mapas, monedas, documentos, piezas sueltas, etc.) */
-const BAD_FILE_WORDS = /painting|portrait|engraving|etching|print of|drawing|illustration|sketch|\bmap\b|stamp|postage|coin|currency|banknote|manuscript|document|book cover|dust jacket|advertisement|poster|logo|coat of arms|insignia|medal|uniform|soldier|military(?! vehicle)|naval|admiral|battalion|regiment|flag of|diagram|cartoon|caricature|comic|icon\.|engine bay|dashboard|interior view|wheel rim|bumper|headlight|taillight|seat cover|brochure|catalog(ue)?|advert\b/i;
+const BAD_FILE_WORDS = /\bATV\b|FL250|FL350|buggy|go-?kart|karting|toy|diecast|die-cast|scale model|model car|lego|cutaway|concept|prototype|race ?car|racing|rally car|crash test|painting|portrait|engraving|etching|print of|drawing|illustration|sketch|\bmap\b|stamp|postage|coin|currency|banknote|manuscript|document|book cover|dust jacket|advertisement|poster|logo|coat of arms|insignia|medal|uniform|soldier|military(?! vehicle)|naval|admiral|battalion|regiment|flag of|diagram|cartoon|caricature|comic|icon\.|engine bay|dashboard|interior view|wheel rim|bumper|headlight|taillight|seat cover|brochure|catalog(ue)?|advert\b/i;
 function looksLikeVehiclePhoto(title, width, height){
   if (BAD_FILE_WORDS.test(title)) return false;
   if (!width || !height) return true;
@@ -772,21 +771,33 @@ async function commonsSearch(gsrsearch, limit = 10){
   const q = (await (await fetch(url)).json()).query || {};
   return Object.values(q.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
 }
+const USED_FILES = new Set();   // evita que dos modelos distintos muestren la misma foto
+function photoScore(title){
+  const y = (title.match(/\b(19[5-9]\d|20[0-2]\d)\b/g) || []).map(Number);
+  const ymax = y.length ? Math.max(...y) : 0;
+  let sc = 0;
+  if (ymax >= 2018) sc += 4; else if (ymax >= 2012) sc += 2; else if (ymax > 0 && ymax < 2005) sc -= 4;
+  if (/front|side|exterior|three.?quarter/i.test(title)) sc += 1;
+  if (/rear|back view|interior|engine|wheel|badge|detail|close.?up|trunk|cargo/i.test(title)) sc -= 3;
+  return sc;
+}
 function pickVehiclePhoto(pages){
-  for (const pg of pages){
+  const ok = [];
+  pages.forEach((pg, i) => {
     const ii = pg.imageinfo && pg.imageinfo[0];
     const title = pg.title.replace(/^File:/, '');
-    if (ii && ii.thumburl && /jpe?g|png/i.test(ii.mime || '') && looksLikeVehiclePhoto(title, ii.width, ii.height))
-      return { src: ii.thumburl, file: title };
-  }
-  return null;
+    if (ii && ii.thumburl && /jpe?g|png/i.test(ii.mime || '') && looksLikeVehiclePhoto(title, ii.width, ii.height) && !USED_FILES.has(title))
+      ok.push({ src: ii.thumburl, file: title, sc: photoScore(title) - i * 0.1 });
+  });
+  ok.sort((a, b) => b.sc - a.sc);
+  return ok[0] || null;
 }
 async function commonsPhoto(brand, model){
   const words = `${brand} ${model}`.split(/\s+/).filter(w => w.length > 1);
   const intitle = words.map(w => `intitle:"${w}"`).join(' ');
   try {
     // 1) El título del archivo debe mencionar la marca y el modelo (más preciso)
-    let pages = await commonsSearch(`${intitle} filetype:bitmap`);
+    let pages = await commonsSearch(`${intitle} filetype:bitmap`, 25);
     let photo = pickVehiclePhoto(pages);
     if (photo) return photo;
     // 2) Si no hay nada, se intenta una búsqueda más amplia pero se exige
@@ -813,11 +824,22 @@ async function loadPhotos(){
     const final = Object.assign({}, ...results.map(r => r.final));
     const byTitle = Object.assign({}, ...results.map(r => r.byTitle));
     Object.entries(WIKI).forEach(([k, t]) => { if (byTitle[final[t]]) PHOTOS[k] = byTitle[final[t]]; });
+    // Etapa 2: si dos modelos distintos quedaron con la MISMA foto (F-150 y F-250, RAM 1500 y 2500...),
+    // solo el primero la conserva; los demás buscan una foto propia en Commons.
+    const shared = {}, byFile = {};
+    Object.entries(PHOTOS).forEach(([k, ph]) => { (byFile[ph.file] = byFile[ph.file] || []).push(k); });
+    Object.values(byFile).forEach(keys => keys.slice(1).forEach(k => { shared[k] = PHOTOS[k]; delete PHOTOS[k]; }));
+    Object.values(PHOTOS).forEach(ph => USED_FILES.add(ph.file));
     applyPhotos();
-    // Etapa 2: para cada modelo sin foto (p. ej. UTV), buscar en Wikimedia Commons
+    // Etapa 3: para cada modelo sin foto propia, buscar en Wikimedia Commons (uno por uno para no repetir archivos)
     const allKeys = [...new Set(VEHICLES.map(v => `${v.brand} ${v.model}`))];
     const missing = allKeys.filter(k => !PHOTOS[k] && !LOCAL_PHOTOS[k]);
-    await Promise.all(missing.map(async k => { const sp = k.indexOf(' '); const brand = k.slice(0, sp), model = k.slice(sp + 1); try { const ph = await commonsPhoto(brand, model); if (ph) PHOTOS[k] = ph; } catch (e) {} }));
+    for (const k of missing){
+      const sp = k.indexOf(' '); const brand = k.slice(0, sp), model = k.slice(sp + 1);
+      try { const ph = await commonsPhoto(brand, model); if (ph){ PHOTOS[k] = ph; USED_FILES.add(ph.file); } } catch (e) {}
+    }
+    // Etapa 4: si un modelo "hermano" no encontró foto propia, vuelve a la foto compartida (es el mismo vehículo base)
+    Object.entries(shared).forEach(([k, ph]) => { if (!PHOTOS[k]) PHOTOS[k] = ph; });
     applyPhotos();
   } catch (e) {
     console.warn('Fotos no disponibles (sin internet o conexión bloqueada).', e);

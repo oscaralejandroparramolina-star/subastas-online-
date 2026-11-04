@@ -752,18 +752,49 @@ async function fetchTitlesBatch(batch){
 }
 /* Respaldo: busca una foto real del modelo en Wikimedia Commons (licencia libre)
    cuando Wikipedia no tiene imagen del artículo (sucede sobre todo con los UTV). */
-async function commonsPhoto(query){
+/* Palabras que delatan un archivo que NO es una foto del vehículo
+   (cuadros, mapas, monedas, documentos, piezas sueltas, etc.) */
+const BAD_FILE_WORDS = /painting|portrait|engraving|etching|print of|drawing|illustration|sketch|\bmap\b|stamp|postage|coin|currency|banknote|manuscript|document|book cover|dust jacket|advertisement|poster|logo|coat of arms|insignia|medal|uniform|soldier|military(?! vehicle)|naval|admiral|battalion|regiment|flag of|diagram|cartoon|caricature|comic|icon\.|engine bay|dashboard|interior view|wheel rim|bumper|headlight|taillight|seat cover|brochure|catalog(ue)?|advert\b/i;
+function looksLikeVehiclePhoto(title, width, height){
+  if (BAD_FILE_WORDS.test(title)) return false;
+  if (!width || !height) return true;
+  const ratio = width / height;
+  return width >= 500 && ratio >= 0.9 && ratio <= 2.6; // descarta retratos/documentos verticales y tiras muy angostas
+}
+/* Busca la foto de un vehículo en Wikimedia Commons (licencia libre).
+   Exige que el título del archivo contenga literalmente la marca Y el
+   modelo (operador intitle:, con AND entre ambos) para no traer imágenes
+   de temas que solo coinciden por palabras sueltas, como ocurría antes. */
+async function commonsSearch(gsrsearch, limit = 10){
   const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*'
-    + '&generator=search&gsrnamespace=6&gsrlimit=10&gsrsearch=' + encodeURIComponent(query + ' filetype:bitmap')
-    + '&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=800';
+    + '&generator=search&gsrnamespace=6&gsrlimit=' + limit + '&gsrsearch=' + encodeURIComponent(gsrsearch)
+    + '&prop=imageinfo&iiprop=url|mime|size&iiurlwidth=900';
   const q = (await (await fetch(url)).json()).query || {};
-  const pages = Object.values(q.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+  return Object.values(q.pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+}
+function pickVehiclePhoto(pages){
   for (const pg of pages){
     const ii = pg.imageinfo && pg.imageinfo[0];
-    const bad = /logo|icon|map|diagram|engine|wheel|interior|dashboard|badge|emblem|seat|part/i.test(pg.title);
-    if (ii && ii.thumburl && /jpe?g|png/i.test(ii.mime || '') && (ii.width || 801) > 500 && !bad)
-      return { src: ii.thumburl, file: pg.title.replace(/^File:/, '') };
+    const title = pg.title.replace(/^File:/, '');
+    if (ii && ii.thumburl && /jpe?g|png/i.test(ii.mime || '') && looksLikeVehiclePhoto(title, ii.width, ii.height))
+      return { src: ii.thumburl, file: title };
   }
+  return null;
+}
+async function commonsPhoto(brand, model){
+  const words = `${brand} ${model}`.split(/\s+/).filter(w => w.length > 1);
+  const intitle = words.map(w => `intitle:"${w}"`).join(' ');
+  try {
+    // 1) El título del archivo debe mencionar la marca y el modelo (más preciso)
+    let pages = await commonsSearch(`${intitle} filetype:bitmap`);
+    let photo = pickVehiclePhoto(pages);
+    if (photo) return photo;
+    // 2) Si no hay nada, se intenta una búsqueda más amplia pero se exige
+    //    igualmente que el resultado no sea un cuadro, mapa, documento, etc.
+    pages = await commonsSearch(`"${brand} ${model}" vehicle filetype:bitmap`, 15);
+    photo = pickVehiclePhoto(pages);
+    if (photo) return photo;
+  } catch (e) { /* sin conexión o la consulta falló: se deja la ilustración */ }
   return null;
 }
 function applyPhotos(){
@@ -786,7 +817,7 @@ async function loadPhotos(){
     // Etapa 2: para cada modelo sin foto (p. ej. UTV), buscar en Wikimedia Commons
     const allKeys = [...new Set(VEHICLES.map(v => `${v.brand} ${v.model}`))];
     const missing = allKeys.filter(k => !PHOTOS[k] && !LOCAL_PHOTOS[k]);
-    await Promise.all(missing.map(async k => { try { const ph = await commonsPhoto(k); if (ph) PHOTOS[k] = ph; } catch (e) {} }));
+    await Promise.all(missing.map(async k => { const sp = k.indexOf(' '); const brand = k.slice(0, sp), model = k.slice(sp + 1); try { const ph = await commonsPhoto(brand, model); if (ph) PHOTOS[k] = ph; } catch (e) {} }));
     applyPhotos();
   } catch (e) {
     console.warn('Fotos no disponibles (sin internet o conexión bloqueada).', e);

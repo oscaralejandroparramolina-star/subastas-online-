@@ -258,6 +258,108 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
 .foot-bottom{margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.8rem;opacity:.7}
 
 /* =========================================================
+   11. CUENTAS, NOTIFICACIONES Y PANELES
+   ========================================================= */
+/* Campana de notificaciones en la barra utilitaria */
+.u-right{display:flex;gap:16px;align-items:center}
+.bell{position:relative;background:none;border:0;color:inherit;cursor:pointer;padding:4px;display:none;align-items:center;gap:6px;font-size:.83rem}
+.bell.on{display:inline-flex}
+.bell svg{width:18px;height:18px}
+.bell .dot{position:absolute;top:0;right:0;min-width:16px;height:16px;border-radius:999px;background:#E0263A;color:#fff;font-size:.65rem;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.who{display:none;align-items:center;gap:8px}
+.who.on{display:flex}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:.75rem;font-weight:700;flex:none}
+/* Panel desplegable de notificaciones */
+.notif-pop{position:absolute;right:16px;top:36px;width:380px;max-width:calc(100vw - 24px);max-height:70vh;overflow:auto;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 18px 40px rgba(10,15,25,.22);z-index:95}
+.notif-pop header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700}
+.notif-pop header button{background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer;font-size:.85rem}
+.n-item{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.n-item:last-child{border-bottom:0}
+.n-item:hover{background:var(--bg-2)}
+.n-item.unread{background:#F0F4FF}
+.n-ico{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:1rem}
+.n-win{background:#E2F3EB;color:var(--live)}
+.n-out{background:#FDE9E7;color:var(--alert)}
+.n-inf{background:var(--brand-soft);color:var(--brand)}
+.n-txt{flex:1;min-width:0}
+.n-txt b{display:block;font-size:.92rem}
+.n-txt p{margin:2px 0 0;font-size:.85rem;color:var(--ink-2)}
+.n-txt time{font-size:.76rem;color:var(--ink-2)}
+.n-empty{padding:30px 14px;text-align:center;color:var(--ink-2);font-size:.9rem}
+
+/* Página de cuenta (usuario y admin) */
+.acct{display:grid;grid-template-columns:250px 1fr;gap:0;border-top:1px solid var(--line);min-height:70vh}
+.acct-side{border-right:1px solid var(--line);padding:20px 0;background:var(--bg)}
+.acct-user{padding:0 18px 16px;border-bottom:1px solid var(--line);margin-bottom:10px;display:flex;gap:12px;align-items:center}
+.acct-user .avatar{width:44px;height:44px;font-size:1.05rem}
+.acct-user b{display:block}
+.acct-user small{color:var(--ink-2);word-break:break-all}
+.acct-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px}
+.acct-nav button{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;background:none;border:0;padding:10px 12px;border-radius:7px;cursor:pointer;font-size:.94rem;color:var(--ink-2);width:100%}
+.acct-nav button:hover{background:var(--bg-2);color:var(--ink)}
+.acct-nav button[aria-current="true"]{background:var(--brand-soft);color:var(--brand);font-weight:700}
+.acct-nav .pill{background:var(--brand);color:#fff;border-radius:999px;font-size:.7rem;padding:1px 7px;font-weight:700}
+.acct-main{padding:22px 24px 50px;min-width:0}
+.acct-main h2{margin-bottom:4px}
+.acct-main .lead{color:var(--ink-2);margin-bottom:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:22px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi b{display:block;font-size:1.6rem;font-family:var(--cond)}
+.kpi span{color:var(--ink-2);font-size:.85rem}
+.kpi.good b{color:var(--live)}
+.kpi.warn b{color:var(--alert)}
+/* Línea de tiempo de movimientos */
+.tl{position:relative;padding-left:26px}
+.tl::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl-item{position:relative;padding:0 0 18px}
+.tl-item::before{content:"";position:absolute;left:-22px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--brand);border:2px solid var(--bg)}
+.tl-item.ok::before{background:var(--live)}
+.tl-item.bad::before{background:var(--alert)}
+.tl-item b{font-size:.95rem}
+.tl-item p{margin:2px 0 0;font-size:.89rem;color:var(--ink-2)}
+.tl-item time{font-size:.78rem;color:var(--ink-2)}
+.tl-item a{color:var(--brand);font-weight:600}
+/* Tablas de cuenta y admin */
+.t2{width:100%;border-collapse:collapse;font-size:.9rem;min-width:620px}
+.t2 th{background:var(--bg-2);color:var(--ink-2);text-align:left;padding:10px 12px;font-size:.78rem;border-bottom:1px solid var(--line);white-space:nowrap}
+.t2 td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.t2 tr:last-child td{border-bottom:0}
+.t2 tbody tr:hover{background:var(--bg-2)}
+.t2 .mini{width:74px;aspect-ratio:4/3;border-radius:5px;overflow:hidden}
+.linkish{color:var(--brand);font-weight:600;cursor:pointer;background:none;border:0;padding:0;text-align:left}
+.linkish:hover{text-decoration:underline}
+.st{display:inline-block;font-size:.74rem;font-weight:700;padding:2px 9px;border-radius:999px}
+.st-win{background:#E2F3EB;color:var(--live)}
+.st-out{background:#FDE9E7;color:var(--alert)}
+.st-end{background:var(--bg-2);color:var(--ink-2)}
+.st-adm{background:#F3E8FF;color:#7127BA}
+.st-ven{background:#FFF4DB;color:#8A5B00}
+.st-com{background:var(--brand-soft);color:var(--brand)}
+.empty2{padding:40px 20px;text-align:center;border:1px dashed var(--line);border-radius:10px;color:var(--ink-2)}
+.empty2 b{display:block;color:var(--ink);margin-bottom:6px;font-size:1.05rem}
+/* Formulario de acceso */
+.auth{max-width:420px;margin:40px auto;border:1px solid var(--line);border-radius:14px;padding:26px}
+.auth h2{margin-bottom:6px}
+.auth .lead{color:var(--ink-2);margin-bottom:18px}
+.auth label{display:block;font-size:.82rem;font-weight:600;color:var(--ink-2);margin:12px 0 5px}
+.auth input{width:100%;border:1px solid var(--line);border-radius:7px;padding:11px 12px;min-height:44px}
+.auth .btn{margin-top:18px;width:100%}
+.auth .err{color:#C2281B;font-size:.86rem;margin-top:10px}
+.demo-box{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
+.demo-box p{margin:0 0 10px;font-size:.85rem;color:var(--ink-2)}
+.demo-acc{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:.86rem}
+.demo-acc b{display:block}
+.demo-acc small{color:var(--ink-2)}
+@media (max-width:860px){
+  .acct{grid-template-columns:1fr}
+  .acct-side{border-right:0;border-bottom:1px solid var(--line)}
+  .acct-nav{flex-direction:row;overflow-x:auto}
+  .acct-nav button{white-space:nowrap}
+  .acct-main{padding:18px 16px 40px}
+  .notif-pop{right:8px;width:calc(100vw - 16px)}
+}
+
+/* =========================================================
    10. RESPONSIVE
    ========================================================= */
 @media (max-width:1200px){
@@ -308,7 +410,16 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
 <!-- ======================= BARRA UTILITARIA ======================= -->
 <div class="utility"><div class="wrap">
   <select aria-label="País e idioma"><option>Estados Unidos | Español</option><option>Estados Unidos | English</option><option>Colombia | Español</option></select>
-  <div class="u-right"><a href="#" class="hide-sm">Centro de ayuda</a><a href="#" class="hide-sm">Portal de vendedores</a><a href="#">Registrarse</a><a href="#">Iniciar sesión</a></div>
+  <div class="u-right">
+    <a href="#" class="hide-sm">Centro de ayuda</a>
+    <button class="bell" id="bell" aria-label="Notificaciones" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 16V11a6 6 0 1 0-12 0v5l-1.5 2.5h15L18 16z" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" stroke-linecap="round"/></svg>
+      <span class="hide-sm">Avisos</span><span class="dot" id="bellDot" hidden>0</span>
+    </button>
+    <span class="who" id="who"></span>
+    <a href="#" id="linkLogin" onclick="event.preventDefault();goAuth('registro')">Registrarse</a>
+    <a href="#" id="linkLogin2" onclick="event.preventDefault();goAuth('login')">Iniciar sesión</a>
+  </div>
 </div></div>
 
 <!-- ======================= HEADER ======================= -->
@@ -331,7 +442,7 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
   <li><a class="nav-link" href="#hoy">Ubicaciones</a></li>
   <li><button class="nav-link" aria-expanded="false">Servicios y soporte <svg class="caret" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <div class="drop"><a href="#">Transporte de vehículos</a><a href="#">Informe del vehículo</a><a href="#">Inspección presencial</a><a href="#">Opciones de pago</a></div></li>
-  <li><a class="nav-link nav-help" href="#">Centro de ayuda</a></li>
+  <li><a class="nav-link nav-help" href="#" onclick="event.preventDefault();goAccount()" id="navAccount">Mi cuenta</a></li>
   <li><button class="nav-link nav-sell" aria-expanded="false">Vender mi vehículo <svg class="caret" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <div class="drop"><a href="#vender">Particulares</a><a href="#vender">Empresas y flotas</a><a href="#vender">Concesionarios</a></div></li>
 </ul></div></nav>
@@ -402,6 +513,14 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
   </div>
 </section>
 
+<!-- ======================= CUENTA / ACCESO (oculta por defecto) ======================= -->
+<section id="cuenta" hidden>
+  <div class="wrap"><div class="page-head" style="padding:22px 0 4px">
+    <div class="crumbs" style="font-size:.95rem"><button class="linkish" onclick="closeAccount()">Inicio</button> / <span id="acctCrumb">Mi cuenta</span></div>
+  </div></div>
+  <div id="acctRoot"></div>
+</section>
+
 <!-- ======================= SUBASTAS DE HOY + UBICACIONES ======================= -->
 <section class="sec sec-alt" id="hoy"><div class="wrap two">
   <div><div class="sec-head"><h2>Subastas de hoy</h2></div><div class="list" id="todayList"></div></div>
@@ -438,6 +557,7 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
   <div class="foot-bottom"><span>© 2026 SUBASTAS ONLINE</span><span>Catálogo ficticio de referencia: lotes, precios y resultados no corresponden a vehículos reales.</span></div>
 </div></footer>
 
+<div id="notifRoot"></div>
 <div id="modalRoot"></div>
 <div id="toastRoot" aria-live="polite"></div>
 
@@ -1075,10 +1195,29 @@ function openLot(lot){
 }
 function closeLot(){ $('#modalRoot').innerHTML = ''; }
 function placeBid(lot){
+  const me = DB.me();
+  if (!me){ closeLot(); toast('Inicia sesión para poder ofertar.'); return goAuth('login'); }
   const v = VEHICLES.find(x => x.lot === lot), amt = +$('#mAmt').value, min = v.bid + step(v);
   if (!amt || amt < min) return toast(`La oferta mínima es ${usd(min)}.`);
+  // Si otra persona ya tenía la oferta más alta en este lote, queda superada
+  const mine = DB.myBids[me.id] = DB.myBids[me.id] || {};
+  const prev = mine[lot];
   v.bid = amt; v.bids++; watched.add(v.lot);
-  closeLot(); renderResults(); toast(`Oferta de ${usd(amt)} registrada en el lote ${lot}.`);
+  mine[lot] = { lot, amount: amt, state: 'ganando', at: Date.now() };
+  // Si otro usuario tenía la punta en este lote, su oferta queda superada y se le avisa
+  Object.entries(DB.myBids).forEach(([oid, lots]) => {
+    if (oid !== me.id && lots[lot] && lots[lot].state === 'ganando'){
+      lots[lot].state = 'superado';
+      logMove(oid, 'superado', `Te superaron en el lote ${lot}: la puja subió a ${usd(amt)}`, lot);
+      pushNotif(oid, 'out', 'Te superaron la oferta', `${fullName(v)} va en ${usd(amt)}. Oferta mínima para recuperar la punta: ${usd(amt + step(v))}.`, lot);
+    }
+  });
+  logMove(me.id, 'oferta', `Ofertaste ${usd(amt)} en el lote ${lot}`, lot);
+  pushNotif(me.id, 'inf', 'Oferta registrada', `Tu oferta de ${usd(amt)} es la más alta en ${fullName(v)}.`, lot);
+  if (prev && prev.state === 'superado') logMove(me.id, 'oferta', `Recuperaste la oferta más alta en el lote ${lot}`, lot);
+  DB.save(); renderSessionUI();
+  closeLot(); renderResults(); if (!$('#cuenta').hidden) renderAccount();
+  toast(`Oferta de ${usd(amt)} registrada en el lote ${lot}.`);
 }
 function loadMissing(){ $$('[data-photo]').forEach(el => { const k = el.dataset.photo; if (PHOTOS[k] && !el.querySelector('img')) el.insertAdjacentHTML('beforeend', imgTag(k, el.dataset.alt)); }); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeLot(); $$('.nav li.open').forEach(x => x.classList.remove('open')); } });
@@ -1103,6 +1242,469 @@ function renderSold(){
   </tbody></table></div>`;
 }
 
+
+/* =========================================================
+   M. CUENTAS, SESIÓN Y MOVIMIENTOS
+   Demostración: los datos viven en el navegador (localStorage).
+   En producción: Supabase Auth + tablas profiles, bids,
+   audit_log y notifications del archivo SQL del proyecto.
+   ========================================================= */
+const STORE_KEY = 'subastas-online-cuentas-v1';
+
+/* Cuentas de prueba. La contraseña es solo para la demostración. */
+const SEED_USERS = [
+  { id:'u_demo',  email:'comprador.demo@subastasonline.co', pass:'demo1234',  name:'Carlos Restrepo',  role:'comprador',
+    phone:'+1 305 555 0142', city:'Miami, FL', verified:true,  createdAt:'2026-08-14T15:20:00Z', seeded:true },
+  { id:'u_nuevo', email:'nuevo.usuario@subastasonline.co',  pass:'nuevo1234', name:'Cuenta en limpio', role:'comprador',
+    phone:'', city:'', verified:true, createdAt:'2026-11-01T09:00:00Z', seeded:false },
+  { id:'u_admin', email:'admin@subastasonline.co',          pass:'admin1234', name:'Administrador',    role:'administrador',
+    phone:'+1 214 555 0100', city:'Dallas, TX', verified:true, createdAt:'2026-07-02T11:00:00Z', seeded:false }
+];
+
+const DB = {
+  users: [], sessions: [], moves: [], notifs: [], myBids: {}, session: null,
+  load(){
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) {}
+    if (raw && raw.users && raw.users.length){
+      Object.assign(this, raw);
+    } else {
+      this.users = SEED_USERS.map(u => ({ ...u }));
+      this.sessions = []; this.moves = []; this.notifs = []; this.myBids = {}; this.session = null;
+      seedDemoActivity();
+    }
+  },
+  save(){
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        users:this.users, sessions:this.sessions, moves:this.moves,
+        notifs:this.notifs, myBids:this.myBids, session:this.session
+      }));
+    } catch (e) {}
+  },
+  user(id){ return this.users.find(u => u.id === id) || null; },
+  me(){ return this.session ? this.user(this.session) : null; }
+};
+
+/* Registro de movimientos (equivale a la tabla audit_log del SQL) */
+function logMove(userId, type, text, lot = null, at = Date.now()){
+  DB.moves.unshift({ id: 'mv' + Math.random().toString(36).slice(2, 9), userId, type, text, lot, at });
+  DB.save();
+}
+/* Notificación dentro de la plataforma (tabla notifications del SQL) */
+function pushNotif(userId, kind, title, text, lot = null, at = Date.now()){
+  DB.notifs.unshift({ id: 'nt' + Math.random().toString(36).slice(2, 9), userId, kind, title, text, lot, at, read:false });
+  DB.save();
+}
+const myNotifs = () => DB.session ? DB.notifs.filter(n => n.userId === DB.session) : [];
+const unreadCount = () => myNotifs().filter(n => !n.read).length;
+
+/* ---- Actividad de la cuenta de prueba: 4 lotes ya subastados ---- */
+function seedDemoActivity(){
+  const uid = 'u_demo', H1 = 36e5, D1 = 864e5, now = Date.now();
+  const sold = VEHICLES.filter(v => v.sold);
+  const live = VEHICLES.filter(v => !v.sold && v.ends > now).sort((a, b) => a.ends - b.ends);
+  const picks = [sold[0], sold[1], live[0], live[2]].filter(Boolean);
+  if (!picks.length) return;
+  const estado = ['ganada', 'perdida', 'ganando', 'superado'];
+
+  picks.forEach((v, i) => {
+    const st = estado[i];
+    const base = st === 'ganada' || st === 'perdida' ? v.bid : v.bid;
+    const mine = st === 'ganando' ? base
+               : st === 'superado' ? Math.round(base * 0.94 / 50) * 50
+               : st === 'ganada' ? base
+               : Math.round(base * 0.88 / 50) * 50;
+    const t0 = st === 'ganada' || st === 'perdida' ? v.ends - 2 * D1 : now - (3 + i) * H1;
+    (DB.myBids[uid] = DB.myBids[uid] || {})[v.lot] = { lot: v.lot, amount: mine, state: st, at: t0 };
+
+    logMove(uid, 'oferta', `Ofertaste ${usd(mine)} en el lote ${v.lot}`, v.lot, t0);
+    if (st === 'superado'){
+      logMove(uid, 'superado', `Te superaron en el lote ${v.lot}: la puja subió a ${usd(v.bid)}`, v.lot, t0 + 40 * 6e4);
+      pushNotif(uid, 'out', 'Te superaron la oferta', `${fullName(v)} va en ${usd(v.bid)}. Oferta mínima para recuperar la punta: ${usd(v.bid + step(v))}.`, v.lot, t0 + 40 * 6e4);
+    }
+    if (st === 'ganando'){
+      pushNotif(uid, 'inf', 'Vas ganando', `Tu oferta de ${usd(mine)} es la más alta en ${fullName(v)}. La subasta cierra pronto.`, v.lot, t0 + 5 * 6e4);
+    }
+    if (st === 'ganada'){
+      const f = feeTotal(mine);
+      logMove(uid, 'ganada', `Ganaste el lote ${v.lot} por ${usd(mine)}`, v.lot, v.ends);
+      pushNotif(uid, 'win', 'Ganaste la subasta', `${fullName(v)} se te adjudicó por ${usd(mine)}. Total a pagar con comisión e IVA: ${usd(f.total)}.`, v.lot, v.ends);
+    }
+    if (st === 'perdida'){
+      logMove(uid, 'perdida', `No ganaste el lote ${v.lot}; cerró en ${usd(v.bid)}`, v.lot, v.ends);
+      pushNotif(uid, 'out', 'Subasta cerrada', `${fullName(v)} cerró en ${usd(v.bid)} y no resultaste ganador.`, v.lot, v.ends);
+    }
+  });
+
+  // Inicios de sesión previos de la cuenta de prueba (para el panel del admin)
+  [26, 11, 4].forEach(h => DB.sessions.push({ userId:uid, at: now - h * H1 }));
+  DB.sessions.push({ userId:'u_admin', at: now - 2 * H1 });
+  logMove(uid, 'registro', 'Cuenta verificada y habilitada para ofertar', null, now - 80 * 24 * H1);
+  DB.save();
+}
+
+/* Comisión del comprador: 5 % (mínimo 500 USD) + IVA 19 % */
+function feeTotal(amount){
+  const premium = Math.max(amount * 0.05, 500), vat = premium * 0.19;
+  return { premium, vat, total: amount + premium + vat };
+}
+
+/* ---- Sesión ---- */
+function login(email, pass){
+  const u = DB.users.find(x => x.email.toLowerCase() === String(email).trim().toLowerCase());
+  if (!u) return { ok:false, msg:'No existe una cuenta con ese correo.' };
+  if (u.pass !== pass) return { ok:false, msg:'La contraseña no coincide.' };
+  DB.session = u.id;
+  DB.sessions.push({ userId:u.id, at: Date.now() });
+  logMove(u.id, 'acceso', 'Inicio de sesión');
+  DB.save(); renderSessionUI();
+  return { ok:true, user:u };
+}
+function registerUser(name, email, pass){
+  email = String(email).trim().toLowerCase();
+  if (!name || !email || !pass) return { ok:false, msg:'Completa todos los campos.' };
+  if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)) return { ok:false, msg:'Escribe un correo válido.' };
+  if (pass.length < 8) return { ok:false, msg:'La contraseña debe tener al menos 8 caracteres.' };
+  if (DB.users.some(u => u.email.toLowerCase() === email)) return { ok:false, msg:'Ya existe una cuenta con ese correo.' };
+  const u = { id:'u' + Math.random().toString(36).slice(2, 8), email, pass, name, role:'comprador',
+              phone:'', city:'', verified:true, createdAt:new Date().toISOString(), seeded:false };
+  DB.users.push(u); DB.session = u.id;
+  DB.sessions.push({ userId:u.id, at: Date.now() });
+  logMove(u.id, 'registro', 'Cuenta creada');
+  pushNotif(u.id, 'inf', 'Bienvenido a SUBASTAS ONLINE', 'Tu cuenta está lista. Explora el inventario y haz tu primera oferta.');
+  DB.save(); renderSessionUI();
+  return { ok:true, user:u };
+}
+function logout(){
+  const me = DB.me(); if (me) logMove(me.id, 'acceso', 'Cierre de sesión');
+  DB.session = null; DB.save(); renderSessionUI(); closeAccount();
+  toast('Sesión cerrada.');
+}
+function renderSessionUI(){
+  const me = DB.me();
+  const bell = $('#bell'), who = $('#who');
+  $('#linkLogin').hidden = !!me; $('#linkLogin2').hidden = !!me;
+  bell.classList.toggle('on', !!me);
+  who.classList.toggle('on', !!me);
+  if (me){
+    const ini = me.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    who.innerHTML = `<span class="avatar">${ini}</span><button class="linkish" style="color:inherit" onclick="goAccount()">${me.name.split(' ')[0]}</button>
+      <a href="#" onclick="event.preventDefault();logout()">Salir</a>`;
+    const n = unreadCount(), dot = $('#bellDot');
+    dot.hidden = n === 0; dot.textContent = n > 9 ? '9+' : n;
+  }
+  $('#navAccount').textContent = me && me.role === 'administrador' ? 'Panel de administrador' : 'Mi cuenta';
+}
+
+/* =========================================================
+   N. CAMPANA DE NOTIFICACIONES
+   ========================================================= */
+const N_ICON = { win:'★', out:'!', inf:'i' };
+const N_CLS  = { win:'n-win', out:'n-out', inf:'n-inf' };
+function timeAgo(t){
+  const d = Date.now() - t, m = Math.floor(d / 6e4), h = Math.floor(d / 36e5), dd = Math.floor(d / 864e5);
+  if (m < 1) return 'ahora';
+  if (m < 60) return `hace ${m} min`;
+  if (h < 24) return `hace ${h} h`;
+  if (dd < 30) return `hace ${dd} d`;
+  return dateF(t);
+}
+function toggleNotifs(){
+  if ($('#notifRoot').innerHTML){ $('#notifRoot').innerHTML = ''; $('#bell').setAttribute('aria-expanded','false'); return; }
+  const list = myNotifs();
+  $('#notifRoot').innerHTML = `<div class="notif-pop" role="dialog" aria-label="Notificaciones">
+    <header><span>Avisos</span>${list.some(n => !n.read) ? '<button onclick="markAllRead()">Marcar todo como leído</button>' : ''}</header>
+    ${list.length ? list.slice(0, 30).map(n => `
+      <div class="n-item ${n.read ? '' : 'unread'}" onclick="openNotif('${n.id}')">
+        <span class="n-ico ${N_CLS[n.kind] || 'n-inf'}">${N_ICON[n.kind] || 'i'}</span>
+        <span class="n-txt"><b>${n.title}</b><p>${n.text}</p><time>${timeAgo(n.at)}</time></span>
+      </div>`).join('')
+    : '<div class="n-empty">No tienes avisos todavía.<br>Cuando ofertes, aquí te avisamos si te superan o si ganas.</div>'}
+  </div>`;
+  $('#bell').setAttribute('aria-expanded','true');
+}
+function markAllRead(){ myNotifs().forEach(n => n.read = true); DB.save(); renderSessionUI(); toggleNotifs(); toggleNotifs(); }
+function openNotif(id){
+  const n = DB.notifs.find(x => x.id === id); if (!n) return;
+  n.read = true; DB.save(); renderSessionUI();
+  $('#notifRoot').innerHTML = '';
+  if (n.lot) openLot(n.lot); else goAccount('avisos');
+}
+
+/* =========================================================
+   O. PANTALLA DE ACCESO Y REGISTRO
+   ========================================================= */
+let authMode = 'login';
+function goAuth(mode){ authMode = mode || 'login'; openAccountShell(); }
+function authHTML(){
+  const reg = authMode === 'registro';
+  return `<div class="wrap"><div class="auth">
+    <h2>${reg ? 'Crear cuenta' : 'Iniciar sesión'}</h2>
+    <p class="lead">${reg ? 'Regístrate para ofertar y seguir tus subastas.' : 'Entra para ver tus pujas, movimientos y avisos.'}</p>
+    <form onsubmit="event.preventDefault();doAuth(this)">
+      ${reg ? '<label for="aName">Nombre completo</label><input id="aName" name="name" autocomplete="name" required>' : ''}
+      <label for="aMail">Correo electrónico</label><input id="aMail" name="email" type="email" autocomplete="email" required>
+      <label for="aPass">Contraseña</label><input id="aPass" name="pass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" required>
+      <button class="btn btn-brand" type="submit">${reg ? 'Crear cuenta y entrar' : 'Entrar'}</button>
+      <p class="err" id="authErr" hidden></p>
+    </form>
+    <p style="margin-top:14px;font-size:.9rem" class="muted">${reg ? '¿Ya tienes cuenta?' : '¿Aún no tienes cuenta?'}
+      <button class="linkish" onclick="goAuth('${reg ? 'login' : 'registro'}')">${reg ? 'Inicia sesión' : 'Regístrate'}</button></p>
+    <div class="demo-box">
+      <p><b>Cuentas de prueba</b> (toca una para entrar):</p>
+      ${SEED_USERS.map(u => `<div class="demo-acc">
+        <span><b>${u.role === 'administrador' ? 'Administrador' : u.seeded ? 'Comprador con actividad' : 'Comprador en limpio'}</b><small>${u.email} · ${u.pass}</small></span>
+        <button class="btn btn-line btn-sm" onclick="quickLogin('${u.email}')">Entrar</button></div>`).join('')}
+    </div>
+  </div></div>`;
+}
+function doAuth(form){
+  const d = Object.fromEntries(new FormData(form));
+  const r = authMode === 'registro' ? registerUser(d.name, d.email, d.pass) : login(d.email, d.pass);
+  const err = $('#authErr');
+  if (!r.ok){ err.hidden = false; err.textContent = r.msg; return; }
+  toast(`Hola, ${r.user.name.split(' ')[0]}.`);
+  goAccount();
+}
+function quickLogin(email){
+  const u = SEED_USERS.find(x => x.email === email);
+  const r = login(u.email, u.pass);
+  if (r.ok){ toast(`Entraste como ${r.user.name}.`); goAccount(); }
+}
+
+/* =========================================================
+   P. CUENTA DEL POSTOR (comprador)
+   ========================================================= */
+let acctTab = null;
+const USER_TABS = [['resumen','Resumen'],['pujas','Mis pujas'],['movimientos','Mis movimientos'],['adjudicaciones','Adjudicaciones'],['avisos','Avisos'],['perfil','Mi perfil']];
+const ADMIN_TABS = [['panel','Resumen'],['usuarios','Usuarios'],['accesos','Inicios de sesión'],['actividad','Actividad global'],['lotes','Subastas']];
+
+function openAccountShell(){
+  $$('main > section').forEach(sec => { if (sec.id !== 'cuenta') sec.hidden = true; });
+  $('#cuenta').hidden = false;
+  renderAccount();
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+function closeAccount(){
+  $$('main > section').forEach(sec => { if (sec.id !== 'cuenta') sec.hidden = false; });
+  $('#cuenta').hidden = true;
+}
+function goAccount(tab){
+  if (!DB.me()) return goAuth('login');
+  acctTab = tab || null;
+  openAccountShell();
+}
+function renderAccount(){
+  const me = DB.me();
+  if (!me){ $('#acctCrumb').textContent = authMode === 'registro' ? 'Crear cuenta' : 'Iniciar sesión'; $('#acctRoot').innerHTML = authHTML(); return; }
+  const admin = me.role === 'administrador';
+  const tabs = admin ? ADMIN_TABS : USER_TABS;
+  if (!tabs.some(t => t[0] === acctTab)) acctTab = tabs[0][0];
+  $('#acctCrumb').textContent = admin ? 'Panel de administrador' : 'Mi cuenta';
+  const ini = me.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const unread = unreadCount();
+  $('#acctRoot').innerHTML = `<div class="acct">
+    <aside class="acct-side">
+      <div class="acct-user"><span class="avatar">${ini}</span><span><b>${me.name}</b><small>${me.email}</small>
+        <span class="st ${admin ? 'st-adm' : 'st-com'}" style="margin-top:4px;display:inline-block">${admin ? 'Administrador' : 'Comprador'}</span></span></div>
+      <nav class="acct-nav">${tabs.map(([k, l]) => `<button aria-current="${acctTab === k}" onclick="acctTab='${k}';renderAccount()">
+        <span>${l}</span>${k === 'avisos' && unread ? `<span class="pill">${unread}</span>` : ''}</button>`).join('')}
+        <button onclick="logout()" style="color:#C2281B">Cerrar sesión</button></nav>
+    </aside>
+    <div class="acct-main">${admin ? adminPane() : userPane()}</div>
+  </div>`;
+}
+
+/* ---- Datos del postor ---- */
+const bidsOf = uid => Object.values(DB.myBids[uid] || {}).map(b => ({ ...b, v: VEHICLES.find(x => x.lot === b.lot) })).filter(x => x.v).sort((a, b) => b.at - a.at);
+const myBidList = () => DB.session ? bidsOf(DB.session) : [];
+const movesOf = uid => DB.moves.filter(m => m.userId === uid).sort((a, b) => b.at - a.at);
+const STATE_LBL = { ganando:['Vas ganando','st-win'], superado:['Te superaron','st-out'], ganada:['Adjudicada','st-win'], perdida:['No ganada','st-end'] };
+
+function userPane(){
+  const me = DB.me(), bids = myBidList(), moves = movesOf(me.id), notifs = myNotifs();
+  if (acctTab === 'resumen'){
+    const act = bids.filter(b => b.state === 'ganando' || b.state === 'superado');
+    const won = bids.filter(b => b.state === 'ganada');
+    const spent = won.reduce((a, b) => a + feeTotal(b.amount).total, 0);
+    return `<h2>Resumen</h2><p class="lead">Tu actividad en SUBASTAS ONLINE.</p>
+      <div class="kpis">
+        <div class="kpi"><b>${bids.length}</b><span>Lotes en los que ofertaste</span></div>
+        <div class="kpi ${act.some(b => b.state === 'ganando') ? 'good' : ''}"><b>${act.length}</b><span>Subastas activas tuyas</span></div>
+        <div class="kpi good"><b>${won.length}</b><span>Lotes adjudicados</span></div>
+        <div class="kpi"><b>${won.length ? usd(spent) : '—'}</b><span>Total adjudicado con comisión</span></div>
+      </div>
+      ${bids.length ? `<h3 style="margin-bottom:10px">Tus subastas en curso</h3>${bidTable(act.length ? act : bids.slice(0, 4))}` :
+      `<div class="empty2"><b>Todavía no has ofertado</b>Explora el inventario y haz tu primera oferta. Aquí verás cada movimiento y te avisaremos si te superan.
+        <div style="margin-top:14px"><button class="btn btn-brand" onclick="closeAccount();$('#inventario').scrollIntoView()">Ver inventario</button></div></div>`}`;
+  }
+  if (acctTab === 'pujas') return `<h2>Mis pujas</h2><p class="lead">Cada lote en el que has ofertado y cómo va.</p>` +
+    (bids.length ? bidTable(bids) : emptyPane('Sin pujas registradas', 'Cuando ofertes por un vehículo aparecerá aquí con su estado en tiempo real.'));
+  if (acctTab === 'movimientos') return `<h2>Mis movimientos</h2><p class="lead">Historial completo de tu cuenta, del más reciente al más antiguo.</p>` +
+    (moves.length ? `<div class="tl">${moves.map(m => `<div class="tl-item ${m.type === 'ganada' ? 'ok' : (m.type === 'superado' || m.type === 'perdida') ? 'bad' : ''}">
+      <b>${m.text}</b>${m.lot ? `<p><button class="linkish" onclick="openLot('${m.lot}')">Ver lote ${m.lot}</button></p>` : ''}
+      <time>${new Date(m.at).toLocaleString('es-CO', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</time></div>`).join('')}</div>`
+    : emptyPane('Sin movimientos', 'Aquí quedará registrada cada oferta, adjudicación y acceso a tu cuenta.'));
+  if (acctTab === 'adjudicaciones'){
+    const won = bids.filter(b => b.state === 'ganada');
+    return `<h2>Adjudicaciones</h2><p class="lead">Lotes que ganaste y lo que debes pagar.</p>` +
+      (won.length ? won.map(b => { const f = feeTotal(b.amount); return `<div class="kpi" style="margin-bottom:14px;padding:16px">
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div class="mini" style="width:120px">${photo(b.v)}</div>
+          <div style="flex:1;min-width:180px"><b style="font-size:1.05rem;font-family:var(--font)">${fullName(b.v)}</b>
+            <span class="muted" style="display:block;font-size:.88rem">Lote ${b.v.lot} · ${b.v.yard}</span></div>
+          <span class="st st-win">Adjudicada</span></div>
+        <table class="t2" style="min-width:0;margin-top:14px"><tbody>
+          <tr><td>Precio adjudicado</td><td style="text-align:right"><b>${usd(b.amount)}</b></td></tr>
+          <tr><td>Comisión de comprador (5 %)</td><td style="text-align:right">${usd(f.premium)}</td></tr>
+          <tr><td>IVA sobre la comisión (19 %)</td><td style="text-align:right">${usd(f.vat)}</td></tr>
+          <tr><td><b>Total a pagar</b></td><td style="text-align:right"><b>${usd(f.total)}</b></td></tr>
+        </tbody></table>
+        <p class="muted" style="font-size:.85rem;margin-top:10px">Pago dentro de 3 días hábiles. Retiro en ${b.v.city} dentro de 5 días hábiles tras el pago. Traspaso y transporte se cotizan aparte.</p>
+      </div>`; }).join('')
+      : emptyPane('Sin adjudicaciones', 'Cuando ganes una subasta verás aquí el total a pagar y los plazos.'));
+  }
+  if (acctTab === 'avisos') return `<h2>Avisos</h2><p class="lead">Te avisamos cuando te superan, cuando una subasta cierra y cuando ganas.</p>` +
+    (notifs.length ? `<div style="border:1px solid var(--line);border-radius:10px;overflow:hidden">${notifs.map(n => `
+      <div class="n-item ${n.read ? '' : 'unread'}" onclick="openNotif('${n.id}')">
+        <span class="n-ico ${N_CLS[n.kind] || 'n-inf'}">${N_ICON[n.kind] || 'i'}</span>
+        <span class="n-txt"><b>${n.title}</b><p>${n.text}</p><time>${timeAgo(n.at)}</time></span></div>`).join('')}</div>`
+    : emptyPane('Sin avisos', 'Cuando participes en una subasta te avisaremos aquí mismo.'));
+  if (acctTab === 'perfil') return `<h2>Mi perfil</h2><p class="lead">Datos de tu cuenta.</p>
+    <table class="t2" style="min-width:0;max-width:560px"><tbody>
+      <tr><td>Nombre</td><td><b>${me.name}</b></td></tr>
+      <tr><td>Correo</td><td>${me.email}</td></tr>
+      <tr><td>Teléfono</td><td>${me.phone || '<span class="muted">Sin registrar</span>'}</td></tr>
+      <tr><td>Ciudad</td><td>${me.city || '<span class="muted">Sin registrar</span>'}</td></tr>
+      <tr><td>Tipo de cuenta</td><td><span class="st st-com">Comprador</span></td></tr>
+      <tr><td>Verificación</td><td>${me.verified ? '<span class="st st-win">Verificada para ofertar</span>' : '<span class="st st-out">Pendiente</span>'}</td></tr>
+      <tr><td>Registro</td><td>${dateF(new Date(me.createdAt).getTime())}</td></tr>
+    </tbody></table>`;
+  return '';
+}
+function emptyPane(title, text){ return `<div class="empty2"><b>${title}</b>${text}</div>`; }
+function bidTable(rows){
+  return `<div class="table-wrap"><table class="t2"><thead><tr><th>Vehículo</th><th>Tu oferta</th><th>Puja actual</th><th>Estado</th><th>Cierre</th><th></th></tr></thead><tbody>
+    ${rows.map(b => { const [lbl, cls] = STATE_LBL[b.state] || ['—','st-end']; const closed = b.v.sold || b.v.ends <= Date.now();
+      return `<tr>
+        <td><div style="display:flex;gap:10px;align-items:center"><div class="mini">${photo(b.v)}</div>
+          <div><button class="linkish" onclick="openLot('${b.v.lot}')">${fullName(b.v)}</button>
+          <span class="muted" style="display:block;font-size:.82rem">Lote ${b.v.lot} · ${b.v.yard}</span></div></div></td>
+        <td><b>${usd(b.amount)}</b></td>
+        <td>${usd(b.v.bid)}</td>
+        <td><span class="st ${cls}">${lbl}</span></td>
+        <td>${closed ? dateF(b.v.ends) : `<span data-ends="${b.v.ends}">${left(b.v.ends - Date.now())}</span>`}</td>
+        <td>${closed ? '' : `<button class="btn btn-brand btn-sm" onclick="openLot('${b.v.lot}')">Ofertar</button>`}</td>
+      </tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+
+/* =========================================================
+   Q. PANEL DE ADMINISTRADOR
+   ========================================================= */
+const ROLE_ST = { administrador:['Administrador','st-adm'], vendedor:['Vendedor','st-ven'], comprador:['Comprador','st-com'] };
+const lastLogin = uid => { const s = DB.sessions.filter(x => x.userId === uid).map(x => x.at); return s.length ? Math.max(...s) : null; };
+const loginCount = uid => DB.sessions.filter(x => x.userId === uid).length;
+
+function adminPane(){
+  if (acctTab === 'panel'){
+    const compradores = DB.users.filter(u => u.role !== 'administrador');
+    const conPuja = compradores.filter(u => bidsOf(u.id).length).length;
+    const act = DB.sessions.filter(s => Date.now() - s.at < 864e5).length;
+    return `<h2>Resumen general</h2><p class="lead">Estado de la plataforma y de los usuarios registrados.</p>
+      <div class="kpis">
+        <div class="kpi"><b>${DB.users.length}</b><span>Cuentas registradas</span></div>
+        <div class="kpi"><b>${conPuja}</b><span>Usuarios con pujas activas</span></div>
+        <div class="kpi good"><b>${act}</b><span>Inicios de sesión (24 h)</span></div>
+        <div class="kpi"><b>${active().length}</b><span>Lotes en subasta</span></div>
+      </div>
+      <h3 style="margin-bottom:10px">Últimos movimientos de todos los usuarios</h3>${globalMoves(12)}`;
+  }
+  if (acctTab === 'usuarios'){
+    return `<h2>Usuarios</h2><p class="lead">Todas las cuentas registradas con sus datos y su actividad.</p>
+      <div class="table-wrap"><table class="t2"><thead><tr><th>Usuario</th><th>Correo</th><th>Tipo</th><th>Registro</th><th>Último acceso</th><th>Accesos</th><th>Pujas</th><th></th></tr></thead><tbody>
+      ${DB.users.map(u => { const [lbl, cls] = ROLE_ST[u.role]; const ll = lastLogin(u.id);
+        return `<tr>
+          <td><b>${u.name}</b>${u.city ? `<span class="muted" style="display:block;font-size:.82rem">${u.city}</span>` : ''}</td>
+          <td>${u.email}</td>
+          <td><span class="st ${cls}">${lbl}</span></td>
+          <td>${dateF(new Date(u.createdAt).getTime())}</td>
+          <td>${ll ? timeAgo(ll) : '<span class="muted">Nunca</span>'}</td>
+          <td>${loginCount(u.id)}</td>
+          <td>${bidsOf(u.id).length}</td>
+          <td><button class="btn btn-line btn-sm" onclick="adminUser('${u.id}')">Ver ficha</button></td>
+        </tr>`; }).join('')}
+      </tbody></table></div>`;
+  }
+  if (acctTab === 'accesos'){
+    const rows = [...DB.sessions].sort((a, b) => b.at - a.at).slice(0, 60);
+    return `<h2>Inicios de sesión</h2><p class="lead">Quién ha entrado a la plataforma y cuándo.</p>` +
+      (rows.length ? `<div class="table-wrap"><table class="t2"><thead><tr><th>Usuario</th><th>Correo</th><th>Tipo</th><th>Fecha y hora</th><th>Hace</th></tr></thead><tbody>
+        ${rows.map(sn => { const u = DB.user(sn.userId); if (!u) return ''; const [lbl, cls] = ROLE_ST[u.role];
+          return `<tr><td><b>${u.name}</b></td><td>${u.email}</td><td><span class="st ${cls}">${lbl}</span></td>
+            <td>${new Date(sn.at).toLocaleString('es-CO', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</td>
+            <td>${timeAgo(sn.at)}</td></tr>`; }).join('')}
+      </tbody></table></div>` : emptyPane('Sin registros', 'Aquí aparecerá cada inicio de sesión.'));
+  }
+  if (acctTab === 'actividad') return `<h2>Actividad global</h2><p class="lead">Historial auditable de todos los usuarios: ofertas, adjudicaciones y accesos.</p>${globalMoves(100)}`;
+  if (acctTab === 'lotes'){
+    const rows = [...VEHICLES].sort((a, b) => b.bids - a.bids).slice(0, 30);
+    return `<h2>Subastas</h2><p class="lead">Los 30 lotes con más ofertas del catálogo.</p>
+      <div class="table-wrap"><table class="t2"><thead><tr><th>Lote</th><th>Vehículo</th><th>Patio</th><th>Ofertas</th><th>Puja</th><th>Estado</th></tr></thead><tbody>
+      ${rows.map(v => `<tr><td><button class="linkish" onclick="openLot('${v.lot}')">${v.lot}</button></td>
+        <td>${fullName(v)}</td><td>${v.yard}</td><td>${v.bids}</td><td><b>${usd(v.bid)}</b></td>
+        <td><span class="st ${v.sold ? 'st-end' : 'st-win'}">${v.sold ? v.status : 'Activo'}</span></td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+  return '';
+}
+function globalMoves(limit){
+  const rows = [...DB.moves].sort((a, b) => b.at - a.at).slice(0, limit);
+  if (!rows.length) return emptyPane('Sin actividad', 'Las ofertas y accesos de los usuarios aparecerán aquí.');
+  return `<div class="table-wrap"><table class="t2"><thead><tr><th>Fecha</th><th>Usuario</th><th>Tipo</th><th>Detalle</th><th>Lote</th></tr></thead><tbody>
+    ${rows.map(m => { const u = DB.user(m.userId);
+      return `<tr><td>${new Date(m.at).toLocaleString('es-CO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</td>
+        <td><b>${u ? u.name : m.userId}</b><span class="muted" style="display:block;font-size:.8rem">${u ? u.email : ''}</span></td>
+        <td><span class="st st-end">${m.type}</span></td><td>${m.text}</td>
+        <td>${m.lot ? `<button class="linkish" onclick="openLot('${m.lot}')">${m.lot}</button>` : '—'}</td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+function adminUser(uid){
+  const u = DB.user(uid); if (!u) return;
+  const [lbl, cls] = ROLE_ST[u.role], bids = bidsOf(uid), moves = movesOf(uid), ll = lastLogin(uid);
+  const won = bids.filter(b => b.state === 'ganada');
+  $('#modalRoot').innerHTML = `<div class="modal-back" onclick="if(event.target===this)closeLot()">
+    <div class="modal" style="grid-template-columns:1fr;max-width:860px;position:relative">
+      <button class="m-close" onclick="closeLot()" aria-label="Cerrar">✕</button>
+      <div class="m-body">
+        <div><h3 style="font-size:1.3rem">${u.name}</h3><p class="muted">${u.email}</p>
+          <div style="margin-top:8px"><span class="st ${cls}">${lbl}</span>
+          ${u.verified ? '<span class="st st-win" style="margin-left:6px">Verificada</span>' : '<span class="st st-out" style="margin-left:6px">Sin verificar</span>'}</div></div>
+        <div class="kpis" style="margin:4px 0 0">
+          <div class="kpi"><b>${bids.length}</b><span>Lotes ofertados</span></div>
+          <div class="kpi good"><b>${won.length}</b><span>Adjudicados</span></div>
+          <div class="kpi"><b>${loginCount(uid)}</b><span>Inicios de sesión</span></div>
+        </div>
+        <table class="t2" style="min-width:0"><tbody>
+          <tr><td>Teléfono</td><td>${u.phone || '<span class="muted">Sin registrar</span>'}</td></tr>
+          <tr><td>Ciudad</td><td>${u.city || '<span class="muted">Sin registrar</span>'}</td></tr>
+          <tr><td>Registro</td><td>${dateF(new Date(u.createdAt).getTime())}</td></tr>
+          <tr><td>Último acceso</td><td>${ll ? new Date(ll).toLocaleString('es-CO', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) + ` (${timeAgo(ll)})` : '<span class="muted">Nunca</span>'}</td></tr>
+        </tbody></table>
+        <div><h4 style="margin:6px 0 8px">En qué ha subastado</h4>
+          ${bids.length ? `<table class="t2" style="min-width:0"><thead><tr><th>Lote</th><th>Vehículo</th><th>Su oferta</th><th>Estado</th></tr></thead><tbody>
+            ${bids.map(b => { const [l2, c2] = STATE_LBL[b.state] || ['—','st-end'];
+              return `<tr><td>${b.v.lot}</td><td>${fullName(b.v)}</td><td><b>${usd(b.amount)}</b></td><td><span class="st ${c2}">${l2}</span></td></tr>`; }).join('')}
+          </tbody></table>` : '<p class="muted">Sin pujas registradas.</p>'}</div>
+        <div><h4 style="margin:6px 0 8px">Movimientos</h4>
+          ${moves.length ? `<div class="tl">${moves.slice(0, 20).map(m => `<div class="tl-item ${m.type === 'ganada' ? 'ok' : (m.type === 'superado' || m.type === 'perdida') ? 'bad' : ''}">
+            <b>${m.text}</b><time>${new Date(m.at).toLocaleString('es-CO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</time></div>`).join('')}</div>`
+          : '<p class="muted">Sin movimientos.</p>'}</div>
+      </div></div></div>`;
+  loadMissing();
+}
+
 /* =========================================================
    K. EVENTOS GENERALES
    ========================================================= */
@@ -1120,6 +1722,8 @@ document.addEventListener('click', e => {
   if (F.watch) renderResults();
 });
 $('#menuToggle').onclick = () => { const o = $('#nav').classList.toggle('open'); $('#menuToggle').setAttribute('aria-expanded', o); };
+$('#bell').onclick = e => { e.stopPropagation(); toggleNotifs(); };
+document.addEventListener('click', e => { if (!e.target.closest('#notifRoot') && !e.target.closest('#bell')) $('#notifRoot').innerHTML = ''; });
 $('#sortSel').onchange = e => { const [k, d] = e.target.value.split(':'); SORT.key = k; SORT.dir = +d; renderResults(); };
 $('#perPage').onchange = e => { perPage = +e.target.value; page = 1; renderResults(); };
 setInterval(() => $$('[data-ends]').forEach(el => { el.textContent = (el.dataset.prefix || '') + left(+el.dataset.ends - Date.now()); }), 1000);
@@ -1133,6 +1737,8 @@ renderFilters();
 renderResults();
 renderToday();
 renderSold();
+DB.load();
+renderSessionUI();
 loadPhotos();
 </script>
 </body>

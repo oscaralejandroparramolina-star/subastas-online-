@@ -405,6 +405,39 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
 }
 .f-mobile,.f-apply{display:none!important}
 /* =========================================================
+   13. ACCESO EN EL ENCABEZADO Y PÁGINA DE CUENTA APARTE
+   ========================================================= */
+.hdr-acc{display:flex;align-items:center;gap:10px;flex:none;margin-left:auto}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:999px;padding:10px 22px;font-weight:600;font-size:.94rem;cursor:pointer;border:1px solid transparent;white-space:nowrap;line-height:1}
+.pill-ghost{background:var(--bg);border-color:var(--line);color:var(--ink)}
+.pill-ghost:hover{border-color:var(--ink);}
+.pill-solid{background:var(--brand);color:#fff}
+.pill-solid:hover{background:var(--brand-dark)}
+.hdr-user{display:flex;align-items:center;gap:10px}
+.hdr-user .u-name{font-weight:600;font-size:.92rem;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-user .u-role{display:block;font-size:.74rem;color:var(--ink-2);font-weight:500}
+.hdr-user .avatar{width:38px;height:38px;font-size:.88rem}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg);cursor:pointer;display:grid;place-items:center;position:relative;flex:none}
+.icon-btn:hover{border-color:var(--ink-2)}
+.icon-btn svg{width:19px;height:19px}
+.icon-btn .dot{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;border-radius:999px;background:#E0263A;color:#fff;font-size:.68rem;font-weight:700;display:grid;place-items:center;padding:0 5px;line-height:1;border:2px solid var(--bg)}
+
+/* Página de cuenta en pestaña propia */
+body.solo .site-only{display:none!important}
+body.solo .acct-shell{display:block}
+.acct-shell{display:none}
+.acct-bar{background:var(--navy);color:#fff}
+.acct-bar .wrap{display:flex;align-items:center;gap:16px;min-height:62px}
+.acct-bar .logo-text{color:#fff}
+.acct-bar .logo-text span{color:#9AA3B2}
+.acct-bar .spacer{flex:1}
+.acct-bar a.back{color:#C8D0DE;font-size:.9rem;display:inline-flex;align-items:center;gap:6px}
+.acct-bar a.back:hover{color:#fff}
+.acct-bar .icon-btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}
+.acct-bar .icon-btn .dot{border-color:var(--navy)}
+.acct-bar .u-role{color:#9AA3B2}
+
+/* =========================================================
    12. CELULAR: ajustes finos de la interfaz
    ========================================================= */
 @media (max-width:760px){
@@ -548,6 +581,33 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
   .foot-cols{grid-template-columns:1fr;gap:20px}
   .foot-bottom{flex-direction:column;gap:6px}
 }
+/* --- Celular: acceso en el encabezado y pestaña de cuenta --- */
+@media (max-width:760px){
+  .header .wrap{flex-wrap:wrap;row-gap:10px}
+  .hdr-acc{order:2;margin-left:auto;gap:8px}
+  .pill{padding:9px 16px;font-size:.88rem}
+  .hdr-user{gap:8px}
+  .hdr-user .avatar{width:34px;height:34px;font-size:.78rem}
+  .hdr-user .u-name{max-width:84px;font-size:.86rem}
+  .hdr-user .u-role{font-size:.7rem}
+  .hdr-user .pill{padding:8px 13px;font-size:.82rem}
+  .icon-btn{width:38px;height:38px}
+  .menu-toggle{order:3}
+  .search{order:4}
+  /* Barra de la pestaña de cuenta */
+  .acct-bar .wrap{min-height:58px;gap:10px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+  .acct-bar .logo-text{font-size:1.05rem}
+  .acct-bar .back{order:4;width:100%;padding-top:4px;border-top:1px solid rgba(255,255,255,.12)}
+  .acct-bar .spacer{display:none}
+  .acct-bar #acctBarUser{margin-left:auto}
+}
+@media (max-width:420px){
+  /* Con pantalla angosta se deja solo lo esencial */
+  .hdr-user .u-name,.hdr-user .u-role{display:none}
+  .hdr-user span:has(> .u-name){display:none}
+  .pill{padding:9px 14px;font-size:.84rem}
+}
+
 @media (max-width:380px){
   .cats{grid-template-columns:1fr}
   .kpis{grid-template-columns:1fr}
@@ -561,7 +621,7 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
 <body>
 
 <!-- ======================= BARRA UTILITARIA ======================= -->
-<div class="utility"><div class="wrap">
+<div class="utility site-only"><div class="wrap">
   <select aria-label="País e idioma"><option>Estados Unidos | Español</option><option>Estados Unidos | English</option><option>Colombia | Español</option></select>
   <div class="u-right">
     <a href="#" class="hide-sm">Centro de ayuda</a>
@@ -569,24 +629,23 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 16V11a6 6 0 1 0-12 0v5l-1.5 2.5h15L18 16z" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" stroke-linecap="round"/></svg>
       <span class="hide-sm">Avisos</span><span class="dot" id="bellDot" hidden>0</span>
     </button>
-    <span class="who" id="who"></span>
-    <a href="#" id="linkLogin" onclick="event.preventDefault();goAuth('registro')">Registrarse</a>
-    <a href="#" id="linkLogin2" onclick="event.preventDefault();goAuth('login')">Iniciar sesión</a>
+    <a href="#" class="hide-sm">Portal de vendedores</a>
   </div>
 </div></div>
 
 <!-- ======================= HEADER ======================= -->
-<header class="header"><div class="wrap">
+<header class="header site-only"><div class="wrap">
   <a class="logo" href="#"><span class="logo-mark">SO</span><span class="logo-text">SUBASTAS <span>ONLINE</span></span></a>
   <form class="search" role="search" onsubmit="event.preventDefault();quickSearch(this.q.value)">
     <input name="q" placeholder="Buscar por marca, modelo, año o número de lote" aria-label="Buscar inventario">
     <button type="submit">Buscar</button>
   </form>
+  <div class="hdr-acc" id="hdrAcc"></div>
   <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg></button>
 </div></header>
 
 <!-- ======================= NAVEGACIÓN ======================= -->
-<nav class="nav" id="nav" aria-label="Principal"><div class="wrap"><ul>
+<nav class="nav site-only" id="nav" aria-label="Principal"><div class="wrap"><ul>
   <li><a class="nav-link" href="#hoy">Cómo funciona</a></li>
   <li><button class="nav-link" aria-expanded="false">Inventario <svg class="caret" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <div class="drop"><a href="#inventario">Buscador de vehículos</a><a href="#hoy">Lista de ventas</a><a href="#inventario" onclick="showWatchlist()">Lista de seguimiento</a><a href="#resultados">Resultados de ventas</a></div></li>
@@ -595,12 +654,12 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
   <li><a class="nav-link" href="#hoy">Ubicaciones</a></li>
   <li><button class="nav-link" aria-expanded="false">Servicios y soporte <svg class="caret" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <div class="drop"><a href="#">Transporte de vehículos</a><a href="#">Informe del vehículo</a><a href="#">Inspección presencial</a><a href="#">Opciones de pago</a></div></li>
-  <li><a class="nav-link nav-help" href="#" onclick="event.preventDefault();goAccount()" id="navAccount">Mi cuenta</a></li>
+  <li><a class="nav-link nav-help" href="#" onclick="event.preventDefault()">Centro de ayuda</a></li>
   <li><button class="nav-link nav-sell" aria-expanded="false">Vender mi vehículo <svg class="caret" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
     <div class="drop"><a href="#vender">Particulares</a><a href="#vender">Empresas y flotas</a><a href="#vender">Concesionarios</a></div></li>
 </ul></div></nav>
 
-<main>
+<main class="site-only">
 <!-- ======================= HERO ======================= -->
 <section class="hero">
   <div class="wrap">
@@ -666,14 +725,6 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
   </div>
 </section>
 
-<!-- ======================= CUENTA / ACCESO (oculta por defecto) ======================= -->
-<section id="cuenta" hidden>
-  <div class="wrap"><div class="page-head" style="padding:22px 0 4px">
-    <div class="crumbs" style="font-size:.95rem"><button class="linkish" onclick="closeAccount()">Inicio</button> / <span id="acctCrumb">Mi cuenta</span></div>
-  </div></div>
-  <div id="acctRoot"></div>
-</section>
-
 <!-- ======================= SUBASTAS DE HOY + UBICACIONES ======================= -->
 <section class="sec sec-alt" id="hoy"><div class="wrap two">
   <div><div class="sec-head"><h2>Subastas de hoy</h2></div><div class="list" id="todayList"></div></div>
@@ -697,8 +748,19 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
 </div></section>
 </main>
 
+<!-- ======================= PÁGINA DE CUENTA (pestaña propia) ======================= -->
+<div class="acct-shell" id="acctShell">
+  <div class="acct-bar"><div class="wrap">
+    <a class="logo" href="./"><span class="logo-mark">SO</span><span class="logo-text">SUBASTAS <span>ONLINE</span></span></a>
+    <span class="spacer"></span>
+    <a class="back" href="./">&larr; Volver al inventario</a>
+    <span id="acctBarUser"></span>
+  </div></div>
+  <div id="acctRoot"></div>
+</div>
+
 <!-- ======================= FOOTER ======================= -->
-<footer class="footer"><div class="wrap">
+<footer class="footer site-only"><div class="wrap">
   <div class="foot-cols">
     <div><a class="logo" href="#"><span class="logo-mark">SO</span><span class="logo-text" style="color:#fff">SUBASTAS <span style="color:#AEB5C0">ONLINE</span></span></a><p style="opacity:.75;margin-top:12px">Subastas en línea de vehículos de Estados Unidos.</p></div>
     <div><h4>Comprar</h4><ul><li><a href="#inventario">Buscador</a></li><li><a href="#hoy">Subastas de hoy</a></li><li><a href="#resultados">Resultados</a></li></ul></div>
@@ -1403,6 +1465,8 @@ function renderSold(){
    audit_log y notifications del archivo SQL del proyecto.
    ========================================================= */
 const STORE_KEY = 'subastas-online-cuentas-v1';
+/* SOLO = la página se abrió como pestaña de cuenta (dirección con #cuenta) */
+const SOLO = location.hash.startsWith('#cuenta');
 
 /* Cuentas de prueba. La contraseña es solo para la demostración. */
 const SEED_USERS = [
@@ -1531,23 +1595,39 @@ function registerUser(name, email, pass){
 }
 function logout(){
   const me = DB.me(); if (me) logMove(me.id, 'acceso', 'Cierre de sesión');
-  DB.session = null; DB.save(); renderSessionUI(); closeAccount();
+  DB.session = null; DB.save(); renderSessionUI();
+  if (SOLO){ authMode = 'login'; history.replaceState(null, '', '#cuenta/login'); renderAccount(); }
   toast('Sesión cerrada.');
 }
+const BELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 16V11a6 6 0 1 0-12 0v5l-1.5 2.5h15L18 16z" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" stroke-linecap="round"/></svg>';
+const initials = n => n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+const roleLabel = u => u.role === 'administrador' ? 'Administrador' : 'Comprador';
+
+/* Abre la cuenta en una pestaña aparte (o la muestra si ya estamos en ella) */
+function openAccountTab(tab){
+  const target = location.pathname + '#cuenta' + (tab ? '/' + tab : '');
+  if (SOLO){ location.hash = '#cuenta' + (tab ? '/' + tab : ''); acctTab = tab || acctTab; renderAccount(); return; }
+  window.open(target, '_blank', 'noopener');
+}
 function renderSessionUI(){
-  const me = DB.me();
-  const bell = $('#bell'), who = $('#who');
-  $('#linkLogin').hidden = !!me; $('#linkLogin2').hidden = !!me;
-  bell.classList.toggle('on', !!me);
-  who.classList.toggle('on', !!me);
-  if (me){
-    const ini = me.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-    who.innerHTML = `<span class="avatar">${ini}</span><button class="linkish" style="color:inherit" onclick="goAccount()">${me.name.split(' ')[0]}</button>
-      <a href="#" onclick="event.preventDefault();logout()">Salir</a>`;
-    const n = unreadCount(), dot = $('#bellDot');
-    dot.hidden = n === 0; dot.textContent = n > 9 ? '9+' : n;
-  }
-  $('#navAccount').textContent = me && me.role === 'administrador' ? 'Panel de administrador' : 'Mi cuenta';
+  const me = DB.me(), n = me ? unreadCount() : 0;
+  const bellBtn = `<button class="icon-btn" id="bell" aria-label="Avisos" aria-expanded="false">${BELL_SVG}${n ? `<span class="dot">${n > 9 ? '9+' : n}</span>` : ''}</button>`;
+  const userBox = me ? `<span class="hdr-user">
+      ${bellBtn}
+      <span class="avatar">${initials(me.name)}</span>
+      <span><span class="u-name">${me.name}</span><span class="u-role">${roleLabel(me)}</span></span>
+      <button class="pill pill-ghost" onclick="openAccountTab()">Mi cuenta</button>
+      <button class="pill pill-solid" onclick="logout()">Salir</button>
+    </span>`
+    : `<button class="pill pill-ghost" onclick="openAccountTab('login')">Ingresar</button>
+       <button class="pill pill-solid" onclick="openAccountTab('registro')">Inscríbete</button>`;
+  const hdr = $('#hdrAcc'); if (hdr) hdr.innerHTML = userBox;
+  const bar = $('#acctBarUser');
+  if (bar) bar.innerHTML = me ? `<span class="hdr-user">${bellBtn}
+      <span class="avatar">${initials(me.name)}</span>
+      <span><span class="u-name" style="color:#fff">${me.name}</span><span class="u-role">${roleLabel(me)}</span></span>
+      <button class="pill pill-ghost" onclick="logout()">Salir</button></span>` : '';
+  const b = $('#bell'); if (b) b.onclick = e => { e.stopPropagation(); toggleNotifs(); };
 }
 
 /* =========================================================
@@ -1582,14 +1662,18 @@ function openNotif(id){
   const n = DB.notifs.find(x => x.id === id); if (!n) return;
   n.read = true; DB.save(); renderSessionUI();
   $('#notifRoot').innerHTML = '';
-  if (n.lot) openLot(n.lot); else goAccount('avisos');
+  if (n.lot) openLot(n.lot); else if (SOLO) setAcctTab('avisos'); else openAccountTab('avisos');
 }
 
 /* =========================================================
    O. PANTALLA DE ACCESO Y REGISTRO
    ========================================================= */
 let authMode = 'login';
-function goAuth(mode){ authMode = mode || 'login'; openAccountShell(); }
+function goAuth(mode){
+  authMode = mode || 'login';
+  if (SOLO){ location.hash = '#cuenta/' + authMode; renderAccount(); return; }
+  openAccountTab(authMode);
+}
 function authHTML(){
   const reg = authMode === 'registro';
   return `<div class="wrap"><div class="auth">
@@ -1618,50 +1702,47 @@ function doAuth(form){
   const err = $('#authErr');
   if (!r.ok){ err.hidden = false; err.textContent = r.msg; return; }
   toast(`Hola, ${r.user.name.split(' ')[0]}.`);
-  goAccount();
+  acctTab = null; renderAccount();
 }
 function quickLogin(email){
   const u = SEED_USERS.find(x => x.email === email);
   const r = login(u.email, u.pass);
-  if (r.ok){ toast(`Entraste como ${r.user.name}.`); goAccount(); }
+  if (r.ok){ toast(`Entraste como ${r.user.name}.`); acctTab = null; renderAccount(); }
 }
 
 /* =========================================================
    P. CUENTA DEL POSTOR (comprador)
    ========================================================= */
 let acctTab = null;
+function setAcctTab(k){ acctTab = k; if (SOLO) history.replaceState(null, '', '#cuenta/' + k); renderAccount(); }
 const USER_TABS = [['resumen','Resumen'],['pujas','Mis pujas'],['movimientos','Mis movimientos'],['adjudicaciones','Adjudicaciones'],['avisos','Avisos'],['perfil','Mi perfil']];
 const ADMIN_TABS = [['panel','Resumen'],['usuarios','Usuarios'],['accesos','Inicios de sesión'],['actividad','Actividad global'],['lotes','Subastas']];
 
 function openAccountShell(){
-  $$('main > section').forEach(sec => { if (sec.id !== 'cuenta') sec.hidden = true; });
-  $('#cuenta').hidden = false;
-  renderAccount();
-  window.scrollTo({ top: 0, behavior: 'auto' });
+  if (SOLO){ renderAccount(); return; }
+  openAccountTab(authMode === 'registro' ? 'registro' : 'login');
 }
-function closeAccount(){
-  $$('main > section').forEach(sec => { if (sec.id !== 'cuenta') sec.hidden = false; });
-  $('#cuenta').hidden = true;
-}
-function goAccount(tab){
-  if (!DB.me()) return goAuth('login');
-  acctTab = tab || null;
-  openAccountShell();
-}
+function closeAccount(){ location.href = './'; }
+function goAccount(tab){ openAccountTab(tab); }
 function renderAccount(){
   const me = DB.me();
-  if (!me){ $('#acctCrumb').textContent = authMode === 'registro' ? 'Crear cuenta' : 'Iniciar sesión'; $('#acctRoot').innerHTML = authHTML(); return; }
+  renderSessionUI();
+  if (!me){
+    document.title = (authMode === 'registro' ? 'Crear cuenta' : 'Iniciar sesión') + ' | SUBASTAS ONLINE';
+    $('#acctRoot').innerHTML = authHTML();
+    return;
+  }
   const admin = me.role === 'administrador';
+  document.title = (admin ? 'Panel de administrador' : 'Mi cuenta') + ' | SUBASTAS ONLINE';
   const tabs = admin ? ADMIN_TABS : USER_TABS;
   if (!tabs.some(t => t[0] === acctTab)) acctTab = tabs[0][0];
-  $('#acctCrumb').textContent = admin ? 'Panel de administrador' : 'Mi cuenta';
-  const ini = me.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const ini = initials(me.name);
   const unread = unreadCount();
   $('#acctRoot').innerHTML = `<div class="acct">
     <aside class="acct-side">
       <div class="acct-user"><span class="avatar">${ini}</span><span><b>${me.name}</b><small>${me.email}</small>
         <span class="st ${admin ? 'st-adm' : 'st-com'}" style="margin-top:4px;display:inline-block">${admin ? 'Administrador' : 'Comprador'}</span></span></div>
-      <nav class="acct-nav">${tabs.map(([k, l]) => `<button aria-current="${acctTab === k}" onclick="acctTab='${k}';renderAccount()">
+      <nav class="acct-nav">${tabs.map(([k, l]) => `<button aria-current="${acctTab === k}" onclick="setAcctTab('${k}')">
         <span>${l}</span>${k === 'avisos' && unread ? `<span class="pill">${unread}</span>` : ''}</button>`).join('')}
         <button onclick="logout()" style="color:#C2281B">Cerrar sesión</button></nav>
     </aside>
@@ -1690,7 +1771,7 @@ function userPane(){
       </div>
       ${bids.length ? `<h3 style="margin-bottom:10px">Tus subastas en curso</h3>${bidTable(act.length ? act : bids.slice(0, 4))}` :
       `<div class="empty2"><b>Todavía no has ofertado</b>Explora el inventario y haz tu primera oferta. Aquí verás cada movimiento y te avisaremos si te superan.
-        <div style="margin-top:14px"><button class="btn btn-brand" onclick="closeAccount();$('#inventario').scrollIntoView()">Ver inventario</button></div></div>`}`;
+        <div style="margin-top:14px"><button class="btn btn-brand" onclick="location.href='./#inventario'">Ver inventario</button></div></div>`}`;
   }
   if (acctTab === 'pujas') return `<h2>Mis pujas</h2><p class="lead">Cada lote en el que has ofertado y cómo va.</p>` +
     (bids.length ? bidTable(bids) : emptyPane('Sin pujas registradas', 'Cuando ofertes por un vehículo aparecerá aquí con su estado en tiempo real.'));
@@ -1884,15 +1965,25 @@ setInterval(() => $$('[data-ends]').forEach(el => { el.textContent = (el.dataset
 /* =========================================================
    L. INICIO
    ========================================================= */
-renderHero();
-renderCats();
-renderFilters();
-renderResults();
-renderToday();
-renderSold();
+if (!location.hash.startsWith('#cuenta')){ renderHero(); renderCats(); renderFilters(); renderResults(); }
 DB.load();
-renderSessionUI();
-loadPhotos();
+
+if (SOLO){
+  /* Pestaña independiente: solo se muestra la cuenta, sin el resto del sitio */
+  document.body.classList.add('solo');
+  const parts = location.hash.replace('#cuenta', '').replace(/^\//, '');
+  if (parts === 'login' || parts === 'registro'){ authMode = parts; }
+  else if (parts){ acctTab = parts; }
+  renderAccount();
+  loadPhotos();
+} else {
+  renderToday();
+  renderSold();
+  renderSessionUI();
+  loadPhotos();
+  /* Si la sesión cambia en otra pestaña, esta se actualiza sola */
+  window.addEventListener('storage', e => { if (e.key === STORE_KEY){ DB.load(); renderSessionUI(); } });
+}
 </script>
 </body>
 </html>

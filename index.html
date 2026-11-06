@@ -265,7 +265,8 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
 .bell{position:relative;background:none;border:0;color:inherit;cursor:pointer;padding:4px;display:none;align-items:center;gap:6px;font-size:.83rem}
 .bell.on{display:inline-flex}
 .bell svg{width:18px;height:18px}
-.bell .dot{position:absolute;top:0;right:0;min-width:16px;height:16px;border-radius:999px;background:#E0263A;color:#fff;font-size:.65rem;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.bell .dot{position:absolute;top:-2px;right:-4px;min-width:16px;height:16px;border-radius:999px;background:#E0263A;color:#fff;font-size:.65rem;font-weight:700;display:grid;place-items:center;padding:0 4px;line-height:1}
+[hidden]{display:none!important}
 .who{display:none;align-items:center;gap:8px}
 .who.on{display:flex}
 .avatar{width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:.75rem;font-weight:700;flex:none}
@@ -351,10 +352,11 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
 .demo-acc b{display:block}
 .demo-acc small{color:var(--ink-2)}
 @media (max-width:860px){
-  .acct{grid-template-columns:1fr}
+  .acct{grid-template-columns:minmax(0,1fr)}
+  .acct-side,.acct-main{min-width:0;max-width:100%}
   .acct-side{border-right:0;border-bottom:1px solid var(--line)}
-  .acct-nav{flex-direction:row;overflow-x:auto}
-  .acct-nav button{white-space:nowrap}
+  .acct-nav{flex-direction:row;overflow-x:auto;max-width:100%}
+  .acct-nav button{white-space:nowrap;width:auto}
   .acct-main{padding:18px 16px 40px}
   .notif-pop{right:8px;width:calc(100vw - 16px)}
 }
@@ -402,6 +404,157 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
   .results{padding:16px}
 }
 .f-mobile,.f-apply{display:none!important}
+/* =========================================================
+   12. CELULAR: ajustes finos de la interfaz
+   ========================================================= */
+@media (max-width:760px){
+  /* --- Barra utilitaria: compacta, sin elementos encimados --- */
+  .utility .wrap{height:auto;min-height:42px;padding-top:5px;padding-bottom:5px;gap:8px;flex-wrap:nowrap}
+  .utility select{max-width:112px;font-size:.78rem;padding:0;text-overflow:ellipsis}
+  .u-right{gap:12px;flex:none}
+  .bell{padding:6px 4px}
+  .bell svg{width:20px;height:20px}
+  .who{gap:6px;max-width:150px}
+  .who .linkish{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:72px;font-size:.82rem}
+  .who a{font-size:.8rem;white-space:nowrap}
+  .avatar{width:24px;height:24px;font-size:.68rem}
+
+  /* --- Encabezado y buscador --- */
+  .header .wrap{gap:12px;row-gap:10px}
+  .logo-mark{width:34px;height:34px;font-size:.9rem}
+  .logo-text{font-size:1.1rem}
+  .menu-toggle{width:46px;height:46px}
+  .search{border-width:1.5px}
+  .search input{padding:12px;font-size:16px}   /* 16px evita el zoom automático en iPhone */
+  .search button{padding:0 16px}
+
+  /* --- Menú desplegable: toda la fila es tocable --- */
+  .nav > .wrap > ul{padding:6px 0 10px;gap:0}
+  .nav-link{padding:13px 4px;font-size:1rem;justify-content:space-between;border-radius:0}
+  .nav .nav-sell,.nav .nav-help{margin:8px 0 0;border-radius:8px;padding:13px 14px;justify-content:center}
+  .drop{padding:2px 0 6px 10px;margin-bottom:4px}
+  .drop a{padding:11px 10px;font-size:.95rem;opacity:.85}
+
+  /* --- Hero --- */
+  .hero .wrap{padding-top:26px;padding-bottom:0}
+  .hero h1{font-size:1.75rem}
+  .hero-sub{font-size:1rem}
+  .hero-sub b{font-size:1.25rem}
+  .step-cards{gap:10px;margin:20px 0}
+  .step{padding:14px;border-radius:12px}
+  .step-top{margin-bottom:6px}
+  .step-top b{width:30px;height:30px;font-size:1rem}
+  .step-top h3{font-size:1.1rem}
+  .step p{font-size:.9rem}
+  .hero-cta{width:100%;justify-content:center;padding:14px;font-size:1rem}
+  .hero-media{margin:22px 0 0}
+  .hero-photo.a{border-radius:12px}
+  .live-ribbon{margin-top:18px;padding:14px;font-size:.95rem}
+
+  /* --- Categorías --- */
+  .cats-sec{padding:18px 0}
+  .cats{gap:10px}
+  .cat div{padding:9px 10px}
+  .cat strong{font-size:.9rem}
+  .cat small{font-size:.76rem}
+
+  /* --- Resultados: tarjeta clara en vez de tabla --- */
+  .results{padding:14px 14px 32px}
+  .r-title-main{font-size:1.35rem}
+  .r-actions{width:100%;gap:6px}
+  .r-actions .btn{flex:1;min-width:0;font-size:.82rem;padding:9px 8px}
+  .r-sort{gap:6px;margin:10px 0 12px}
+  .r-sort select{flex:1;min-width:0;font-size:.88rem}
+  .r-row{grid-template-columns:1fr;gap:0;box-shadow:0 1px 3px rgba(20,25,35,.06)}
+  .r-row:nth-child(even){background:var(--bg)}
+  .r-row > div{padding:12px 14px}
+  .r-row > .c-img{padding:0}
+  .c-img .ph{aspect-ratio:16/10;border-radius:10px 10px 0 0}
+  .c-lot{border-top:0}
+  .c-lot .v-name{font-size:1.05rem}
+  .c-lot .lotno{margin:5px 0 9px}
+  /* Datos del vehículo y condición en dos columnas parejas */
+  .c-veh,.c-cond{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+  .c-veh .k,.c-cond .k{grid-column:1/-1}
+  .c-sale{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+  .c-sale .sale-live,.c-sale .sale-next{width:100%;margin-top:2px}
+  /* Bloque de puja destacado al final */
+  .c-bids{background:var(--bg-2);display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+  .c-bids .k{width:100%;margin:0}
+  .bid-amt{margin:0;flex:1;font-size:1.35rem}
+  .c-bids .btn{max-width:none;width:auto;flex:1 1 130px;margin:0;padding:11px 12px}
+
+  /* --- Paginación --- */
+  .pager{justify-content:center;gap:10px}
+  .pager .muted{width:100%;text-align:center;order:-1;font-size:.85rem}
+  .pages .btn{min-width:40px;padding:9px 10px}
+
+  /* --- Panel de notificaciones a pantalla completa --- */
+  .notif-pop{position:fixed;inset:auto 0 0 0;top:auto;width:100%;max-width:none;max-height:76vh;border-radius:16px 16px 0 0;border-left:0;border-right:0;border-bottom:0}
+  .notif-pop header{position:sticky;top:0;background:var(--bg);z-index:2;padding:14px}
+  .n-item{padding:14px}
+  .n-txt b{font-size:.95rem}
+
+  /* --- Cuenta y panel de administrador --- */
+  .acct-side{padding:14px 0 0}
+  .acct-user{padding:0 16px 14px;margin-bottom:8px}
+  .acct-user .avatar{width:40px;height:40px}
+  .acct-user small{font-size:.78rem}
+  .acct-nav{padding:0 10px 10px;gap:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .acct-nav::-webkit-scrollbar{display:none}
+  .acct-nav button{padding:9px 14px;border:1px solid var(--line);border-radius:999px;font-size:.88rem;flex:none}
+  .acct-nav button[aria-current="true"]{border-color:var(--brand)}
+  .acct-main{padding:18px 14px 40px}
+  .acct-main h2{font-size:1.45rem}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+  .kpi{padding:12px}
+  .kpi b{font-size:1.35rem}
+  .kpi span{font-size:.78rem}
+  /* Tablas de cuenta: se vuelven fichas apiladas */
+  .t2{min-width:0;display:block}
+  .t2 thead{display:none}
+  .t2 tbody,.t2 tr,.t2 td{display:block;width:100%}
+  .t2 tr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;padding:4px 0;background:var(--bg)}
+  .t2 tr:hover{background:var(--bg)}
+  .t2 td{border:0;padding:7px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;text-align:right}
+  .t2 td::before{content:attr(data-l);color:var(--ink-2);font-size:.8rem;font-weight:600;text-align:left;flex:none}
+  .t2 td:first-child{text-align:left;padding-top:12px}
+  .t2 td:last-child{padding-bottom:12px}
+  .t2 .mini{width:100%;aspect-ratio:16/9;border-radius:8px}
+  .t2 td .btn{width:100%}
+  .acct-main .table-wrap{overflow:visible;border:0;border-radius:0}
+  /* Línea de tiempo */
+  .tl{padding-left:22px}
+  .tl-item b{font-size:.92rem;display:block}
+  .tl-item time{display:block;margin-top:3px}
+  /* Formulario de acceso */
+  .auth{margin:20px auto;padding:20px 16px;border-radius:12px}
+  .auth input{font-size:16px}
+  .demo-acc{flex-wrap:wrap}
+  .demo-acc .btn{width:100%}
+
+  /* --- Ventanas emergentes --- */
+  .modal-back{padding:0;align-items:flex-end}
+  .modal{border-radius:16px 16px 0 0;max-height:92vh}
+  .m-body{padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+  .m-close{top:10px;right:10px}
+  .facts{grid-template-columns:1fr 1fr;gap:8px 12px}
+
+  /* --- Secciones finales --- */
+  .sec{padding:28px 0}
+  .list-row{grid-template-columns:1fr;gap:8px;padding:14px 16px}
+  .list-row .btn{width:100%}
+  .sell-card{padding:16px}
+  .foot-cols{grid-template-columns:1fr;gap:20px}
+  .foot-bottom{flex-direction:column;gap:6px}
+}
+@media (max-width:380px){
+  .cats{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr}
+  .utility select{max-width:94px}
+  .who .linkish{max-width:54px}
+}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1591,10 +1744,10 @@ function bidTable(rows){
         <td><div style="display:flex;gap:10px;align-items:center"><div class="mini">${photo(b.v)}</div>
           <div><button class="linkish" onclick="openLot('${b.v.lot}')">${fullName(b.v)}</button>
           <span class="muted" style="display:block;font-size:.82rem">Lote ${b.v.lot} · ${b.v.yard}</span></div></div></td>
-        <td><b>${usd(b.amount)}</b></td>
-        <td>${usd(b.v.bid)}</td>
-        <td><span class="st ${cls}">${lbl}</span></td>
-        <td>${closed ? dateF(b.v.ends) : `<span data-ends="${b.v.ends}">${left(b.v.ends - Date.now())}</span>`}</td>
+        <td data-l="Tu oferta"><b>${usd(b.amount)}</b></td>
+        <td data-l="Puja actual">${usd(b.v.bid)}</td>
+        <td data-l="Estado"><span class="st ${cls}">${lbl}</span></td>
+        <td data-l="Cierre">${closed ? dateF(b.v.ends) : `<span data-ends="${b.v.ends}">${left(b.v.ends - Date.now())}</span>`}</td>
         <td>${closed ? '' : `<button class="btn btn-brand btn-sm" onclick="openLot('${b.v.lot}')">Ofertar</button>`}</td>
       </tr>`; }).join('')}
   </tbody></table></div>`;
@@ -1627,12 +1780,12 @@ function adminPane(){
       ${DB.users.map(u => { const [lbl, cls] = ROLE_ST[u.role]; const ll = lastLogin(u.id);
         return `<tr>
           <td><b>${u.name}</b>${u.city ? `<span class="muted" style="display:block;font-size:.82rem">${u.city}</span>` : ''}</td>
-          <td>${u.email}</td>
-          <td><span class="st ${cls}">${lbl}</span></td>
-          <td>${dateF(new Date(u.createdAt).getTime())}</td>
-          <td>${ll ? timeAgo(ll) : '<span class="muted">Nunca</span>'}</td>
-          <td>${loginCount(u.id)}</td>
-          <td>${bidsOf(u.id).length}</td>
+          <td data-l="Correo">${u.email}</td>
+          <td data-l="Tipo"><span class="st ${cls}">${lbl}</span></td>
+          <td data-l="Registro">${dateF(new Date(u.createdAt).getTime())}</td>
+          <td data-l="Último acceso">${ll ? timeAgo(ll) : '<span class="muted">Nunca</span>'}</td>
+          <td data-l="Accesos">${loginCount(u.id)}</td>
+          <td data-l="Pujas">${bidsOf(u.id).length}</td>
           <td><button class="btn btn-line btn-sm" onclick="adminUser('${u.id}')">Ver ficha</button></td>
         </tr>`; }).join('')}
       </tbody></table></div>`;
@@ -1642,9 +1795,9 @@ function adminPane(){
     return `<h2>Inicios de sesión</h2><p class="lead">Quién ha entrado a la plataforma y cuándo.</p>` +
       (rows.length ? `<div class="table-wrap"><table class="t2"><thead><tr><th>Usuario</th><th>Correo</th><th>Tipo</th><th>Fecha y hora</th><th>Hace</th></tr></thead><tbody>
         ${rows.map(sn => { const u = DB.user(sn.userId); if (!u) return ''; const [lbl, cls] = ROLE_ST[u.role];
-          return `<tr><td><b>${u.name}</b></td><td>${u.email}</td><td><span class="st ${cls}">${lbl}</span></td>
-            <td>${new Date(sn.at).toLocaleString('es-CO', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</td>
-            <td>${timeAgo(sn.at)}</td></tr>`; }).join('')}
+          return `<tr><td><b>${u.name}</b></td><td data-l="Correo">${u.email}</td><td data-l="Tipo"><span class="st ${cls}">${lbl}</span></td>
+            <td data-l="Fecha">${new Date(sn.at).toLocaleString('es-CO', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</td>
+            <td data-l="Hace">${timeAgo(sn.at)}</td></tr>`; }).join('')}
       </tbody></table></div>` : emptyPane('Sin registros', 'Aquí aparecerá cada inicio de sesión.'));
   }
   if (acctTab === 'actividad') return `<h2>Actividad global</h2><p class="lead">Historial auditable de todos los usuarios: ofertas, adjudicaciones y accesos.</p>${globalMoves(100)}`;
@@ -1652,9 +1805,9 @@ function adminPane(){
     const rows = [...VEHICLES].sort((a, b) => b.bids - a.bids).slice(0, 30);
     return `<h2>Subastas</h2><p class="lead">Los 30 lotes con más ofertas del catálogo.</p>
       <div class="table-wrap"><table class="t2"><thead><tr><th>Lote</th><th>Vehículo</th><th>Patio</th><th>Ofertas</th><th>Puja</th><th>Estado</th></tr></thead><tbody>
-      ${rows.map(v => `<tr><td><button class="linkish" onclick="openLot('${v.lot}')">${v.lot}</button></td>
-        <td>${fullName(v)}</td><td>${v.yard}</td><td>${v.bids}</td><td><b>${usd(v.bid)}</b></td>
-        <td><span class="st ${v.sold ? 'st-end' : 'st-win'}">${v.sold ? v.status : 'Activo'}</span></td></tr>`).join('')}
+      ${rows.map(v => `<tr><td><button class="linkish" onclick="openLot('${v.lot}')">Lote ${v.lot}</button></td>
+        <td data-l="Vehículo">${fullName(v)}</td><td data-l="Patio">${v.yard}</td><td data-l="Ofertas">${v.bids}</td><td data-l="Puja"><b>${usd(v.bid)}</b></td>
+        <td data-l="Estado"><span class="st ${v.sold ? 'st-end' : 'st-win'}">${v.sold ? v.status : 'Activo'}</span></td></tr>`).join('')}
       </tbody></table></div>`;
   }
   return '';
@@ -1666,8 +1819,8 @@ function globalMoves(limit){
     ${rows.map(m => { const u = DB.user(m.userId);
       return `<tr><td>${new Date(m.at).toLocaleString('es-CO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</td>
         <td><b>${u ? u.name : m.userId}</b><span class="muted" style="display:block;font-size:.8rem">${u ? u.email : ''}</span></td>
-        <td><span class="st st-end">${m.type}</span></td><td>${m.text}</td>
-        <td>${m.lot ? `<button class="linkish" onclick="openLot('${m.lot}')">${m.lot}</button>` : '—'}</td></tr>`; }).join('')}
+        <td data-l="Tipo"><span class="st st-end">${m.type}</span></td><td data-l="Detalle">${m.text}</td>
+        <td data-l="Lote">${m.lot ? `<button class="linkish" onclick="openLot('${m.lot}')">${m.lot}</button>` : '—'}</td></tr>`; }).join('')}
   </tbody></table></div>`;
 }
 function adminUser(uid){
@@ -1695,7 +1848,7 @@ function adminUser(uid){
         <div><h4 style="margin:6px 0 8px">En qué ha subastado</h4>
           ${bids.length ? `<table class="t2" style="min-width:0"><thead><tr><th>Lote</th><th>Vehículo</th><th>Su oferta</th><th>Estado</th></tr></thead><tbody>
             ${bids.map(b => { const [l2, c2] = STATE_LBL[b.state] || ['—','st-end'];
-              return `<tr><td>${b.v.lot}</td><td>${fullName(b.v)}</td><td><b>${usd(b.amount)}</b></td><td><span class="st ${c2}">${l2}</span></td></tr>`; }).join('')}
+              return `<tr><td><b>Lote ${b.v.lot}</b></td><td data-l="Vehículo">${fullName(b.v)}</td><td data-l="Su oferta"><b>${usd(b.amount)}</b></td><td data-l="Estado"><span class="st ${c2}">${l2}</span></td></tr>`; }).join('')}
           </tbody></table>` : '<p class="muted">Sin pujas registradas.</p>'}</div>
         <div><h4 style="margin:6px 0 8px">Movimientos</h4>
           ${moves.length ? `<div class="tl">${moves.slice(0, 20).map(m => `<div class="tl-item ${m.type === 'ganada' ? 'ok' : (m.type === 'superado' || m.type === 'perdida') ? 'bad' : ''}">

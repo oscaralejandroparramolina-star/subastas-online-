@@ -955,6 +955,107 @@ const TRIMS = {
   utv: ['Base','Trail','Premium','Turbo','Ultimate','EPS','XRS','RR']
 };
 
+/* =========================================================
+   A2. GAMA ECONÓMICA · 100 unidades entre US$10,000 y US$20,000
+   Modelos más comerciales del mercado de usados de EE. UU.
+   Años 2017 a 2022 (recientes, pero no de último modelo).
+   Precios de referencia según listados reales de concesionarios
+   y guías de compra de 2026 (Cars.com, iSeeCars, CarWhere,
+   Consumer Reports): el Corolla 2019 ronda los US$15,000 y los
+   compactos y SUV pequeños de 2019-2022 se mueven entre
+   US$13,000 y US$20,000.
+   [marca, modelo, tipo, forma, precio base MY2020 (USD), color]
+   ========================================================= */
+const MODELS_ECO = [
+  // Sedanes compactos: los más vendidos del segmento económico
+  ['Toyota','Corolla','sedan','sedan',15200,'#B7BCC3'],
+  ['Honda','Civic','sedan','sedan',16400,'#2B3038'],
+  ['Nissan','Sentra','sedan','sedan',13400,'#C9CDD3'],
+  ['Hyundai','Elantra','sedan','sedan',13900,'#5B6470'],
+  ['Kia','Forte','sedan','sedan',13200,'#E3E5E8'],
+  ['Mazda','3','sedan','sedan',15600,'#9B1C22'],
+  ['Chevrolet','Cruze','sedan','sedan',11200,'#3D4250'],
+  ['Ford','Focus','sedan','hatch',10600,'#4F6B8A'],
+  ['Volkswagen','Jetta','sedan','sedan',14100,'#2E3640'],
+  ['Subaru','Impreza','sedan','sedan',15400,'#38503F'],
+  ['Nissan','Versa','sedan','sedan',11400,'#B03030'],
+  ['Hyundai','Accent','sedan','sedan',11800,'#6E7681'],
+  ['Kia','Rio','sedan','sedan',11600,'#C26A1E'],
+  ['Toyota','Yaris','sedan','hatch',12400,'#D8D9DB'],
+  ['Volkswagen','Golf','sedan','hatch',15100,'#1F2A44'],
+  ['Honda','Fit','sedan','hatch',13600,'#2847A8'],
+  ['Chevrolet','Spark','sedan','hatch',10200,'#59616B'],
+  ['Mitsubishi','Mirage','sedan','hatch',10400,'#A33A2A'],
+  // Sedanes medianos: espacio familiar a precio bajo
+  ['Toyota','Camry','sedan','sedan',18600,'#ECEDEE'],
+  ['Honda','Accord','sedan','sedan',18900,'#1B1E23'],
+  ['Nissan','Altima','sedan','sedan',14800,'#7C8590'],
+  ['Hyundai','Sonata','sedan','sedan',15200,'#2C3E5C'],
+  ['Chevrolet','Malibu','sedan','sedan',13100,'#8B9198'],
+  ['Kia','Optima','sedan','sedan',13800,'#8A1C2B'],
+  ['Ford','Fusion','sedan','sedan',12900,'#3A3F47'],
+  ['Mazda','6','sedan','sedan',15800,'#1F2328'],
+  // Híbridos: muy buscados por el ahorro de combustible
+  ['Toyota','Prius','sedan','hatch',17400,'#D3D6DA'],
+  ['Hyundai','Ioniq Hybrid','sedan','hatch',15600,'#4A5059'],
+  ['Kia','Niro','suv','hatch',17800,'#566A5A'],
+  // SUV compactas y subcompactas: el segmento que más se mueve
+  ['Honda','CR-V','suv','suv',19400,'#9AA1AA'],
+  ['Toyota','RAV4','suv','suv',19800,'#2A3442'],
+  ['Nissan','Rogue','suv','suv',16900,'#C9CDD3'],
+  ['Ford','Escape','suv','suv',15800,'#4A3B33'],
+  ['Chevrolet','Equinox','suv','suv',15400,'#7A1E22'],
+  ['Hyundai','Tucson','suv','suv',16800,'#38503F'],
+  ['Kia','Sportage','suv','suv',16200,'#2F3A4A'],
+  ['Mazda','CX-5','suv','suv',18200,'#1F2A44'],
+  ['Subaru','Forester','suv','suv',18400,'#5B6470'],
+  ['Jeep','Compass','suv','suv',14600,'#ECEDEE'],
+  ['Jeep','Renegade','suv','suv',13900,'#C26A1E'],
+  ['Honda','HR-V','suv','hatch',16400,'#3B5A86'],
+  ['Nissan','Kicks','suv','hatch',14200,'#D21F2E'],
+  ['Mazda','CX-30','suv','suv',18800,'#2E3640'],
+  ['Hyundai','Kona','suv','hatch',15900,'#2847A8'],
+  ['Kia','Soul','suv','hatch',13700,'#F2A71B'],
+  ['Chevrolet','Trax','suv','hatch',12600,'#6B7480'],
+  ['Buick','Encore','suv','hatch',13400,'#B7BCC3'],
+  ['Mitsubishi','Outlander Sport','suv','suv',12800,'#4F5862'],
+  ['Subaru','Crosstrek','suv','hatch',18600,'#3C4A3E'],
+  // SUV medianas y minivans de bajo costo
+  ['Dodge','Journey','suv','suv',12200,'#2B3038'],
+  ['Ford','Edge','suv','suv',16600,'#59616B'],
+  ['Nissan','Murano','suv','suv',16100,'#A0161E'],
+  ['Chevrolet','Traverse','suv','suv',17900,'#1D2533'],
+  ['Dodge','Grand Caravan','suv','suv',12400,'#7A8590'],
+  ['Chrysler','Pacifica','suv','suv',17200,'#4A5059'],
+  ['Kia','Sedona','suv','suv',14900,'#5B6470'],
+  // Pickups medianas de entrada
+  ['Ford','Ranger','pickup','pickup',19600,'#2F3A4A'],
+  ['Nissan','Frontier','pickup','pickup',17800,'#3C4A3E'],
+  ['Chevrolet','Colorado','pickup','pickup',19200,'#9AA1AA']
+];
+
+/* Artículos de Wikipedia de los modelos que aún no estaban en WIKI */
+Object.assign(WIKI, {
+  'Chevrolet Cruze':'Chevrolet Cruze','Ford Focus':'Ford Focus','Nissan Versa':'Nissan Versa',
+  'Hyundai Accent':'Hyundai Accent','Kia Rio':'Kia Rio','Toyota Yaris':'Toyota Yaris',
+  'Volkswagen Golf':'Volkswagen Golf','Honda Fit':'Honda Fit','Chevrolet Spark':'Chevrolet Spark',
+  'Mitsubishi Mirage':'Mitsubishi Mirage','Kia Optima':'Kia K5','Mazda 6':'Mazda6',
+  'Toyota Prius':'Toyota Prius','Hyundai Ioniq Hybrid':'Hyundai Ioniq','Kia Niro':'Kia Niro',
+  'Jeep Renegade':'Jeep Renegade','Nissan Kicks':'Nissan Kicks','Mazda CX-30':'Mazda CX-30',
+  'Hyundai Kona':'Hyundai Kona','Kia Soul':'Kia Soul','Chevrolet Trax':'Chevrolet Trax',
+  'Buick Encore':'Buick Encore','Mitsubishi Outlander Sport':'Mitsubishi RVR',
+  'Subaru Crosstrek':'Subaru Crosstrek','Dodge Journey':'Dodge Journey','Nissan Murano':'Nissan Murano',
+  'Dodge Grand Caravan':'Dodge Caravan','Kia Sedona':'Kia Carnival','Nissan Frontier':'Nissan Navara'
+});
+
+/* Versiones típicas de los modelos de entrada */
+const TRIMS_ECO = {
+  sedan: ['L','LE','S','SE','LX','EX','SEL','Sport','Limited','Touring'],
+  suv:   ['LX','LE','S','SE','SV','SEL','LT','XLT','Sport','Limited'],
+  pickup:['S','XL','SV','XLT','LT','SR5','Big Horn','Lariat']
+};
+
+
 /* Genera N unidades por modelo (año, versión y precio distintos) hasta
    repartir exactamente TOTAL_UNITS entre los MODELS.length modelos */
 const baseReps = Math.floor(TOTAL_UNITS / MODELS.length);
@@ -998,6 +1099,55 @@ MODELS.forEach(([brand, model, type, shape, basePrice, color], mi) => {
     });
   }
 });
+
+/* =========================================================
+   B2. GENERADOR DE LAS 100 UNIDADES DE GAMA ECONÓMICA
+   Años 2017 a 2022 y precio ajustado para quedar
+   siempre dentro del rango US$10,000 - US$20,000.
+   ========================================================= */
+const ECO_UNITS = 100;
+const ECO_MIN = 10000, ECO_MAX = 20000;
+const ecoBase = Math.floor(ECO_UNITS / MODELS_ECO.length);
+const ecoExtra = ECO_UNITS - ecoBase * MODELS_ECO.length;
+
+let ei = 0;
+MODELS_ECO.forEach(([brand, model, type, shape, basePrice, color], mi) => {
+  const reps = ecoBase + (mi < ecoExtra ? 1 : 0);
+  for (let r = 0; r < reps; r++, ei++) {
+    const year = 2017 + Math.floor(R() * 6);                 // 2017 a 2022
+    const trims = TRIMS_ECO[type] || TRIMS_ECO.sedan;
+    const trim = pick(trims);
+    const trimMult = 0.94 + (trims.indexOf(trim) / (trims.length - 1)) * 0.18;
+    const yearMult = 1 + 0.055 * (year - 2020);              // el año ajusta el precio
+    let price = Math.round(basePrice * trimMult * yearMult / 50) * 50;
+    price = Math.min(ECO_MAX, Math.max(ECO_MIN, price));     // se mantiene dentro del rango
+    const sold = ei % 5 === 4;                               // 1 de cada 5 ya subastado
+    const damage = pick(DAMAGE);
+    const clean = ['Desgaste normal','Abolladuras menores','Granizo','Daño mecánico'].includes(damage) ? R() < .8 : R() < .25;
+    const age = Math.max(0, TODAY_YEAR - year);
+    const miles = Math.round((age * rnd(8500, 13500) + rnd(500, 4000)) / 100) * 100;
+    const ends = sold ? NOW - rnd(1, 18) * D : NOW + [rnd(12, 58) * MIN, rnd(1, 9) * H, rnd(1, 6) * D][ei % 3];
+    const yard = pick(YARDS);
+    VEHICLES.push({
+      lot: String(47100000 + ei * 151 + Math.floor(R() * 90)),
+      brand, model, trim, year, type, shape, color, miles, yard,
+      state: yard.split(', ')[1], city: yard.split(', ')[0],
+      damage, title: clean ? 'Título limpio' : 'Título salvage',
+      runs: damage === 'Inundación' ? false : R() < .75,
+      keys: R() < .88,
+      bid: price,
+      retail: Math.max(price + 500, Math.round((price * rnd(1.35, 1.75) - rnd(1000, 2000)) / 50) * 50),
+      bids: sold ? Math.floor(rnd(12, 55)) : Math.floor(rnd(0, 30)),
+      item: Math.floor(rnd(10, 999)),
+      row: 'ABCDEF'[Math.floor(R() * 6)],
+      published: NOW - rnd(2, 96) * H,
+      ends, sold,
+      budget: true,                                          // marca de gama económica
+      status: sold ? (R() < .85 ? 'Vendido' : 'No vendido (reserva)') : 'Activo'
+    });
+  }
+});
+
 const isLive = v => !v.sold && v.ends - Date.now() < H && v.ends > Date.now();
 const active = () => VEHICLES.filter(v => !v.sold && v.ends > Date.now());
 
@@ -1198,20 +1348,22 @@ const CATS = [
   ['SUV', 'type', 'suv', { shape:'suv', color:'#1F2A44', photoKey:'Toyota RAV4' }],
   ['Sedanes', 'type', 'sedan', { shape:'sedan', color:'#A0161E', photoKey:'Toyota Camry' }],
   ['Eléctricos', 'brand', 'Tesla', { shape:'sedan', color:'#ECEDEE', photoKey:'Tesla Model 3' }],
-  ['Título limpio', 'title', 'Título limpio', { shape:'suv', color:'#566A5A', photoKey:'Honda CR-V' }],
+  ['Hasta $20,000', 'budget', true, { shape:'sedan', color:'#566A5A', photoKey:'Toyota Corolla' }],
   ['Arranca y anda', 'runs', true, { shape:'hatch', color:'#3B5A86', photoKey:'Honda Civic' }]
 ];
 function renderCats(){
   const act = active();
   $('#cats').innerHTML = CATS.map(([label, key, val, v], i) => {
-    const n = act.filter(x => key === 'runs' ? x.runs : x[key] === val).length;
+    const n = act.filter(x => key === 'runs' ? x.runs : key === 'budget' ? x.bid <= 20000 : x[key] === val).length;
     return `<button class="cat" onclick="applyCat(${i})">${photo({ ...v, brand:label, model:'' })}<div><strong>${label}</strong><small>${n} lotes activos</small></div></button>`;
   }).join('');
 }
 function applyCat(i){
   const [, key, val] = CATS[i];
   resetAll(false);
-  if (key === 'runs') F.runs = true; else F[{ type:'types', brand:'brands', title:'titles' }[key]].add(val);
+  if (key === 'runs') F.runs = true;
+  else if (key === 'budget'){ F.priceMax = 20000; }
+  else F[{ type:'types', brand:'brands', title:'titles' }[key]].add(val);
   renderFilters(); renderResults(); $('#inventario').scrollIntoView();
 }
 

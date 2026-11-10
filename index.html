@@ -404,6 +404,20 @@ td .thumb{width:120px;aspect-ratio:4/3;border-radius:6px;overflow:hidden}
   .results{padding:16px}
 }
 .f-mobile,.f-apply{display:none!important}
+/* Tarjetas destacadas de la página principal */
+.feat{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.feat-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;cursor:pointer;transition:border-color .15s,transform .15s}
+.feat-card:hover{border-color:var(--brand);transform:translateY(-2px)}
+.feat-card .ph{aspect-ratio:16/10;height:auto}
+.feat-b{padding:13px 15px 15px;display:flex;flex-direction:column;gap:6px;flex:1}
+.feat-b .ttl{color:var(--brand);font-weight:700;text-transform:uppercase;font-size:.98rem;line-height:1.3}
+.feat-meta{display:flex;justify-content:space-between;font-size:.84rem;color:var(--ink-2);gap:8px}
+.feat-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+.feat-foot .p{font-size:1.25rem;font-weight:700}
+.feat-foot .k{font-size:.76rem;color:var(--ink-2);display:block}
+@media (max-width:1100px){.feat{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.feat{grid-template-columns:1fr}}
+
 /* =========================================================
    13. ACCESO EN EL ENCABEZADO Y PÁGINA DE CUENTA APARTE
    ========================================================= */
@@ -436,6 +450,13 @@ body.solo .acct-shell{display:block}
 .acct-bar .icon-btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}
 .acct-bar .icon-btn .dot{border-color:var(--navy)}
 .acct-bar .u-role{color:#9AA3B2}
+
+/* Campos obligatorios y aceptación de condiciones en el registro */
+.auth .req{color:#C2281B}
+.auth .chk2{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:.86rem;color:var(--ink-2);line-height:1.45}
+.auth .chk2 input{width:19px;height:19px;margin-top:2px;accent-color:var(--brand);flex:none}
+.auth .chk2 a{color:var(--brand);font-weight:600}
+.auth form{max-height:none}
 
 /* =========================================================
    12. CELULAR: ajustes finos de la interfaz
@@ -680,6 +701,16 @@ body.solo .acct-shell{display:block}
 
 <!-- ======================= CATEGORÍAS ======================= -->
 <section class="cats-sec"><div class="wrap"><div class="cats" id="cats"></div></div></section>
+
+<!-- ======================= DESTACADOS ECONÓMICOS ======================= -->
+<section class="sec" id="economicos"><div class="wrap">
+  <div class="sec-head">
+    <div><h2>Los más buscados hasta $20,000</h2>
+      <p class="muted" style="margin:4px 0 0">Modelos de alta rotación en el mercado de usados de Estados Unidos, listos para ofertar.</p></div>
+    <button class="btn btn-outline btn-sm" onclick="applyCat(4)">Ver los <span id="ecoCount">0</span> lotes</button>
+  </div>
+  <div class="feat" id="ecoFeatured"></div>
+</div></section>
 
 <!-- ======================= BUSCADOR DE VEHÍCULOS ======================= -->
 <section id="inventario">
@@ -1351,6 +1382,39 @@ const CATS = [
   ['Hasta $20,000', 'budget', true, { shape:'sedan', color:'#566A5A', photoKey:'Toyota Corolla' }],
   ['Arranca y anda', 'runs', true, { shape:'hatch', color:'#3B5A86', photoKey:'Honda Civic' }]
 ];
+/* Modelos de mayor rotación en el mercado de usados de EE. UU.
+   Se muestran en la página principal para el comprador de presupuesto. */
+const ECO_STARS = ['Toyota Corolla','Honda Civic','Toyota RAV4','Honda CR-V','Toyota Camry','Nissan Rogue',
+                   'Honda Accord','Chevrolet Equinox','Ford Escape','Hyundai Elantra','Mazda CX-5','Nissan Sentra',
+                   'Toyota Prius','Hyundai Tucson','Kia Forte','Mazda 3','Subaru Forester','Kia Sportage'];
+function renderEcoFeatured(){
+  const pool = active().filter(v => v.bid <= 20000);
+  $('#ecoCount').textContent = pool.length;
+  /* Se prioriza un modelo distinto por tarjeta, empezando por los más comerciales */
+  const seen = new Set(), picks = [];
+  ECO_STARS.forEach(k => {
+    if (picks.length >= 8) return;
+    const m = pool.filter(v => `${v.brand} ${v.model}` === k).sort((a, b) => a.ends - b.ends)[0];
+    if (m && !seen.has(k)){ seen.add(k); picks.push(m); }
+  });
+  pool.sort((a, b) => a.ends - b.ends).forEach(v => {
+    const k = `${v.brand} ${v.model}`;
+    if (picks.length < 8 && !seen.has(k)){ seen.add(k); picks.push(v); }
+  });
+  $('#ecoFeatured').innerHTML = picks.slice(0, 8).map(v => `
+    <article class="feat-card" onclick="openLot('${v.lot}')">
+      ${photo(v)}
+      <div class="feat-b">
+        <span class="ttl">${v.year} ${v.brand} ${v.model}</span>
+        <div class="feat-meta"><span>${num(v.miles)} mi</span><span>${v.state} - ${v.city}</span></div>
+        <div class="feat-meta"><span>${v.title}</span>${v.runs ? '<span class="badge badge-ok">Arranca</span>' : ''}</div>
+        <div class="feat-foot">
+          <div><span class="k">Puja actual</span><span class="p">${usd(v.bid)}</span></div>
+          <div style="text-align:right"><span class="k">Cierra en</span><b data-ends="${v.ends}">${left(v.ends - Date.now())}</b></div>
+        </div>
+      </div>
+    </article>`).join('');
+}
 function renderCats(){
   const act = active();
   $('#cats').innerHTML = CATS.map(([label, key, val, v], i) => {
@@ -1620,28 +1684,36 @@ const STORE_KEY = 'subastas-online-cuentas-v1';
 /* SOLO = la página se abrió como pestaña de cuenta (dirección con #cuenta) */
 const SOLO = location.hash.startsWith('#cuenta');
 
-/* Cuentas de prueba. La contraseña es solo para la demostración. */
-const SEED_USERS = [
-  { id:'u_demo',  email:'comprador.demo@subastasonline.co', pass:'demo1234',  name:'Carlos Restrepo',  role:'comprador',
-    phone:'+1 305 555 0142', city:'Miami, FL', verified:true,  createdAt:'2026-08-14T15:20:00Z', seeded:true },
-  { id:'u_nuevo', email:'nuevo.usuario@subastasonline.co',  pass:'nuevo1234', name:'Cuenta en limpio', role:'comprador',
-    phone:'', city:'', verified:true, createdAt:'2026-11-01T09:00:00Z', seeded:false },
-  { id:'u_admin', email:'admin@subastasonline.co',          pass:'admin1234', name:'Administrador',    role:'administrador',
-    phone:'+1 214 555 0100', city:'Dallas, TX', verified:true, createdAt:'2026-07-02T11:00:00Z', seeded:false }
-];
+/* ---------------------------------------------------------
+   CUENTA DE ADMINISTRADOR
+   Es la única cuenta que viene creada. No aparece en el
+   registro público ni en la pantalla de acceso normal:
+   se entra por la dirección  #cuenta/admin
+   Cambia estos dos valores por los tuyos antes de publicar.
+   --------------------------------------------------------- */
+const ADMIN_USER = 'admin.subastas';
+const ADMIN_PASS = 'SubAstas2026#Adm';
+const ADMIN_ACCOUNT = {
+  id:'u_admin', user:ADMIN_USER, email:'admin@subastasonline.co', pass:ADMIN_PASS,
+  name:'Administrador', role:'administrador', phone:'', city:'', verified:true,
+  createdAt:new Date().toISOString(), hidden:true
+};
 
 const DB = {
   users: [], sessions: [], moves: [], notifs: [], myBids: {}, session: null,
   load(){
     let raw = null;
     try { raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) {}
-    if (raw && raw.users && raw.users.length){
+    if (raw && raw.users){
       Object.assign(this, raw);
     } else {
-      this.users = SEED_USERS.map(u => ({ ...u }));
-      this.sessions = []; this.moves = []; this.notifs = []; this.myBids = {}; this.session = null;
-      seedDemoActivity();
+      this.users = []; this.sessions = []; this.moves = []; this.notifs = []; this.myBids = {}; this.session = null;
     }
+    /* La cuenta de administrador siempre existe y se mantiene al día */
+    const i = this.users.findIndex(u => u.id === 'u_admin');
+    if (i === -1) this.users.push({ ...ADMIN_ACCOUNT });
+    else this.users[i] = { ...this.users[i], user:ADMIN_USER, pass:ADMIN_PASS, role:'administrador', hidden:true };
+    this.save();
   },
   save(){
     try {
@@ -1668,51 +1740,6 @@ function pushNotif(userId, kind, title, text, lot = null, at = Date.now()){
 const myNotifs = () => DB.session ? DB.notifs.filter(n => n.userId === DB.session) : [];
 const unreadCount = () => myNotifs().filter(n => !n.read).length;
 
-/* ---- Actividad de la cuenta de prueba: 4 lotes ya subastados ---- */
-function seedDemoActivity(){
-  const uid = 'u_demo', H1 = 36e5, D1 = 864e5, now = Date.now();
-  const sold = VEHICLES.filter(v => v.sold);
-  const live = VEHICLES.filter(v => !v.sold && v.ends > now).sort((a, b) => a.ends - b.ends);
-  const picks = [sold[0], sold[1], live[0], live[2]].filter(Boolean);
-  if (!picks.length) return;
-  const estado = ['ganada', 'perdida', 'ganando', 'superado'];
-
-  picks.forEach((v, i) => {
-    const st = estado[i];
-    const base = st === 'ganada' || st === 'perdida' ? v.bid : v.bid;
-    const mine = st === 'ganando' ? base
-               : st === 'superado' ? Math.round(base * 0.94 / 50) * 50
-               : st === 'ganada' ? base
-               : Math.round(base * 0.88 / 50) * 50;
-    const t0 = st === 'ganada' || st === 'perdida' ? v.ends - 2 * D1 : now - (3 + i) * H1;
-    (DB.myBids[uid] = DB.myBids[uid] || {})[v.lot] = { lot: v.lot, amount: mine, state: st, at: t0 };
-
-    logMove(uid, 'oferta', `Ofertaste ${usd(mine)} en el lote ${v.lot}`, v.lot, t0);
-    if (st === 'superado'){
-      logMove(uid, 'superado', `Te superaron en el lote ${v.lot}: la puja subió a ${usd(v.bid)}`, v.lot, t0 + 40 * 6e4);
-      pushNotif(uid, 'out', 'Te superaron la oferta', `${fullName(v)} va en ${usd(v.bid)}. Oferta mínima para recuperar la punta: ${usd(v.bid + step(v))}.`, v.lot, t0 + 40 * 6e4);
-    }
-    if (st === 'ganando'){
-      pushNotif(uid, 'inf', 'Vas ganando', `Tu oferta de ${usd(mine)} es la más alta en ${fullName(v)}. La subasta cierra pronto.`, v.lot, t0 + 5 * 6e4);
-    }
-    if (st === 'ganada'){
-      const f = feeTotal(mine);
-      logMove(uid, 'ganada', `Ganaste el lote ${v.lot} por ${usd(mine)}`, v.lot, v.ends);
-      pushNotif(uid, 'win', 'Ganaste la subasta', `${fullName(v)} se te adjudicó por ${usd(mine)}. Total a pagar con comisión e IVA: ${usd(f.total)}.`, v.lot, v.ends);
-    }
-    if (st === 'perdida'){
-      logMove(uid, 'perdida', `No ganaste el lote ${v.lot}; cerró en ${usd(v.bid)}`, v.lot, v.ends);
-      pushNotif(uid, 'out', 'Subasta cerrada', `${fullName(v)} cerró en ${usd(v.bid)} y no resultaste ganador.`, v.lot, v.ends);
-    }
-  });
-
-  // Inicios de sesión previos de la cuenta de prueba (para el panel del admin)
-  [26, 11, 4].forEach(h => DB.sessions.push({ userId:uid, at: now - h * H1 }));
-  DB.sessions.push({ userId:'u_admin', at: now - 2 * H1 });
-  logMove(uid, 'registro', 'Cuenta verificada y habilitada para ofertar', null, now - 80 * 24 * H1);
-  DB.save();
-}
-
 /* Comisión del comprador: 5 % (mínimo 500 USD) + IVA 19 % */
 function feeTotal(amount){
   const premium = Math.max(amount * 0.05, 500), vat = premium * 0.19;
@@ -1721,7 +1748,7 @@ function feeTotal(amount){
 
 /* ---- Sesión ---- */
 function login(email, pass){
-  const u = DB.users.find(x => x.email.toLowerCase() === String(email).trim().toLowerCase());
+  const u = DB.users.find(x => (x.email || '').toLowerCase() === String(email).trim().toLowerCase());
   if (!u) return { ok:false, msg:'No existe una cuenta con ese correo.' };
   if (u.pass !== pass) return { ok:false, msg:'La contraseña no coincide.' };
   DB.session = u.id;
@@ -1730,17 +1757,27 @@ function login(email, pass){
   DB.save(); renderSessionUI();
   return { ok:true, user:u };
 }
-function registerUser(name, email, pass){
-  email = String(email).trim().toLowerCase();
-  if (!name || !email || !pass) return { ok:false, msg:'Completa todos los campos.' };
+function registerUser(d){
+  const name = String(d.name || '').trim();
+  const email = String(d.email || '').trim().toLowerCase();
+  const pass = String(d.pass || '');
+  const doc = String(d.doc || '').trim();
+  const phone = String(d.phone || '').trim();
+  const city = String(d.city || '').trim();
+  const address = String(d.address || '').trim();
+  if (!name || !email || !pass || !doc || !phone || !city) return { ok:false, msg:'Completa todos los campos obligatorios.' };
+  if (name.split(/\s+/).length < 2) return { ok:false, msg:'Escribe tu nombre y tu apellido.' };
   if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)) return { ok:false, msg:'Escribe un correo válido.' };
   if (pass.length < 8) return { ok:false, msg:'La contraseña debe tener al menos 8 caracteres.' };
-  if (DB.users.some(u => u.email.toLowerCase() === email)) return { ok:false, msg:'Ya existe una cuenta con ese correo.' };
-  const u = { id:'u' + Math.random().toString(36).slice(2, 8), email, pass, name, role:'comprador',
-              phone:'', city:'', verified:true, createdAt:new Date().toISOString(), seeded:false };
+  if (doc.length < 5) return { ok:false, msg:'Escribe un número de documento válido.' };
+  if (phone.replace(/\D/g, '').length < 7) return { ok:false, msg:'Escribe un teléfono válido.' };
+  if (DB.users.some(u => (u.email || '').toLowerCase() === email)) return { ok:false, msg:'Ya existe una cuenta con ese correo.' };
+  if (DB.users.some(u => u.doc && u.doc === doc)) return { ok:false, msg:'Ya existe una cuenta con ese documento.' };
+  const u = { id:'u' + Math.random().toString(36).slice(2, 8), email, pass, name, doc, phone, city, address,
+              role:'comprador', verified:true, createdAt:new Date().toISOString() };
   DB.users.push(u); DB.session = u.id;
   DB.sessions.push({ userId:u.id, at: Date.now() });
-  logMove(u.id, 'registro', 'Cuenta creada');
+  logMove(u.id, 'registro', `Cuenta creada: ${name}, ${city}`);
   pushNotif(u.id, 'inf', 'Bienvenido a SUBASTAS ONLINE', 'Tu cuenta está lista. Explora el inventario y haz tu primera oferta.');
   DB.save(); renderSessionUI();
   return { ok:true, user:u };
@@ -1748,7 +1785,12 @@ function registerUser(name, email, pass){
 function logout(){
   const me = DB.me(); if (me) logMove(me.id, 'acceso', 'Cierre de sesión');
   DB.session = null; DB.save(); renderSessionUI();
-  if (SOLO){ authMode = 'login'; history.replaceState(null, '', '#cuenta/login'); renderAccount(); }
+  if (SOLO){
+    const wasAdmin = me && me.role === 'administrador';
+    authMode = wasAdmin ? 'admin' : 'login';
+    history.replaceState(null, '', '#cuenta/' + authMode);
+    renderAccount();
+  }
   toast('Sesión cerrada.');
 }
 const BELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 16V11a6 6 0 1 0-12 0v5l-1.5 2.5h15L18 16z" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" stroke-linecap="round"/></svg>';
@@ -1827,39 +1869,82 @@ function goAuth(mode){
   openAccountTab(authMode);
 }
 function authHTML(){
+  if (authMode === 'admin') return adminAuthHTML();
   const reg = authMode === 'registro';
   return `<div class="wrap"><div class="auth">
     <h2>${reg ? 'Crear cuenta' : 'Iniciar sesión'}</h2>
-    <p class="lead">${reg ? 'Regístrate para ofertar y seguir tus subastas.' : 'Entra para ver tus pujas, movimientos y avisos.'}</p>
-    <form onsubmit="event.preventDefault();doAuth(this)">
-      ${reg ? '<label for="aName">Nombre completo</label><input id="aName" name="name" autocomplete="name" required>' : ''}
-      <label for="aMail">Correo electrónico</label><input id="aMail" name="email" type="email" autocomplete="email" required>
-      <label for="aPass">Contraseña</label><input id="aPass" name="pass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" required>
+    <p class="lead">${reg ? 'Completa tus datos para poder ofertar en las subastas.' : 'Entra para ver tus pujas, movimientos y avisos.'}</p>
+    <form onsubmit="event.preventDefault();doAuth(this)" autocomplete="on">
+      ${reg ? `
+      <label for="aName">Nombre completo <span class="req">*</span></label>
+      <input id="aName" name="name" autocomplete="name" required placeholder="Como aparece en tu documento">
+      <label for="aDoc">Documento de identidad <span class="req">*</span></label>
+      <input id="aDoc" name="doc" autocomplete="off" required placeholder="Cédula, licencia o pasaporte">
+      <label for="aPhone">Teléfono <span class="req">*</span></label>
+      <input id="aPhone" name="phone" type="tel" autocomplete="tel" required placeholder="+1 305 555 0142">
+      <label for="aCity">Ciudad y estado <span class="req">*</span></label>
+      <input id="aCity" name="city" autocomplete="address-level2" required placeholder="Miami, FL">
+      <label for="aAddr">Dirección</label>
+      <input id="aAddr" name="address" autocomplete="street-address" placeholder="Opcional, para el traspaso y la entrega">` : ''}
+      <label for="aMail">Correo electrónico ${reg ? '<span class="req">*</span>' : ''}</label>
+      <input id="aMail" name="email" type="email" autocomplete="email" required placeholder="tucorreo@ejemplo.com">
+      <label for="aPass">Contraseña ${reg ? '<span class="req">*</span>' : ''}</label>
+      <input id="aPass" name="pass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" required
+             placeholder="${reg ? 'Mínimo 8 caracteres' : ''}">
+      ${reg ? `<label for="aPass2">Repite la contraseña <span class="req">*</span></label>
+      <input id="aPass2" name="pass2" type="password" autocomplete="new-password" required>
+      <label class="chk2"><input type="checkbox" name="terms" value="1">
+        <span>Declaro que mis datos son verdaderos y acepto las <a href="./#condiciones" target="_blank" rel="noopener">condiciones de participación</a> y el tratamiento de mis datos personales.</span></label>` : ''}
       <button class="btn btn-brand" type="submit">${reg ? 'Crear cuenta y entrar' : 'Entrar'}</button>
       <p class="err" id="authErr" hidden></p>
     </form>
     <p style="margin-top:14px;font-size:.9rem" class="muted">${reg ? '¿Ya tienes cuenta?' : '¿Aún no tienes cuenta?'}
-      <button class="linkish" onclick="goAuth('${reg ? 'login' : 'registro'}')">${reg ? 'Inicia sesión' : 'Regístrate'}</button></p>
-    <div class="demo-box">
-      <p><b>Cuentas de prueba</b> (toca una para entrar):</p>
-      ${SEED_USERS.map(u => `<div class="demo-acc">
-        <span><b>${u.role === 'administrador' ? 'Administrador' : u.seeded ? 'Comprador con actividad' : 'Comprador en limpio'}</b><small>${u.email} · ${u.pass}</small></span>
-        <button class="btn btn-line btn-sm" onclick="quickLogin('${u.email}')">Entrar</button></div>`).join('')}
-    </div>
+      <button class="linkish" onclick="goAuth('${reg ? 'login' : 'registro'}')">${reg ? 'Inicia sesión' : 'Regístrate gratis'}</button></p>
+  </div></div>`;
+}
+/* Acceso del administrador: solo por la dirección #cuenta/admin */
+function adminAuthHTML(){
+  return `<div class="wrap"><div class="auth">
+    <h2>Acceso de administración</h2>
+    <p class="lead">Área restringida. Ingresa con tu usuario de administrador.</p>
+    <form onsubmit="event.preventDefault();doAdminAuth(this)">
+      <label for="adU">Usuario</label><input id="adU" name="user" autocomplete="username" required>
+      <label for="adP">Contraseña</label><input id="adP" name="pass" type="password" autocomplete="current-password" required>
+      <button class="btn btn-brand" type="submit">Entrar al panel</button>
+      <p class="err" id="authErr" hidden></p>
+    </form>
   </div></div>`;
 }
 function doAuth(form){
-  const d = Object.fromEntries(new FormData(form));
-  const r = authMode === 'registro' ? registerUser(d.name, d.email, d.pass) : login(d.email, d.pass);
-  const err = $('#authErr');
-  if (!r.ok){ err.hidden = false; err.textContent = r.msg; return; }
-  toast(`Hola, ${r.user.name.split(' ')[0]}.`);
+  const d = Object.fromEntries(new FormData(form)), err = $('#authErr');
+  const fail = m => { err.hidden = false; err.textContent = m; };
+  if (authMode === 'registro'){
+    if (d.pass !== d.pass2) return fail('Las dos contraseñas no coinciden.');
+    if (!d.terms) return fail('Debes aceptar las condiciones para crear la cuenta.');
+    const r = registerUser(d);
+    if (!r.ok) return fail(r.msg);
+    toast(`Bienvenido, ${r.user.name.split(' ')[0]}.`);
+  } else {
+    const r = login(d.email, d.pass);
+    if (!r.ok) return fail(r.msg);
+    if (r.user.role === 'administrador'){ DB.session = null; DB.save(); return fail('Esta cuenta no se usa en el acceso público.'); }
+    toast(`Hola, ${r.user.name.split(' ')[0]}.`);
+  }
   acctTab = null; renderAccount();
 }
-function quickLogin(email){
-  const u = SEED_USERS.find(x => x.email === email);
-  const r = login(u.email, u.pass);
-  if (r.ok){ toast(`Entraste como ${r.user.name}.`); acctTab = null; renderAccount(); }
+function doAdminAuth(form){
+  const d = Object.fromEntries(new FormData(form)), err = $('#authErr');
+  const u = DB.users.find(x => x.id === 'u_admin');
+  if (!u || String(d.user).trim() !== u.user || d.pass !== u.pass){
+    err.hidden = false; err.textContent = 'Usuario o contraseña incorrectos.';
+    return;
+  }
+  DB.session = u.id;
+  DB.sessions.push({ userId:u.id, at: Date.now() });
+  logMove(u.id, 'acceso', 'Inicio de sesión del administrador');
+  DB.save();
+  acctTab = null; renderAccount();
+  toast('Bienvenido al panel de administración.');
 }
 
 /* =========================================================
@@ -1961,8 +2046,10 @@ function userPane(){
     <table class="t2" style="min-width:0;max-width:560px"><tbody>
       <tr><td>Nombre</td><td><b>${me.name}</b></td></tr>
       <tr><td>Correo</td><td>${me.email}</td></tr>
+      <tr><td>Documento</td><td>${me.doc || '<span class="muted">Sin registrar</span>'}</td></tr>
       <tr><td>Teléfono</td><td>${me.phone || '<span class="muted">Sin registrar</span>'}</td></tr>
       <tr><td>Ciudad</td><td>${me.city || '<span class="muted">Sin registrar</span>'}</td></tr>
+      <tr><td>Dirección</td><td>${me.address || '<span class="muted">Sin registrar</span>'}</td></tr>
       <tr><td>Tipo de cuenta</td><td><span class="st st-com">Comprador</span></td></tr>
       <tr><td>Verificación</td><td>${me.verified ? '<span class="st st-win">Verificada para ofertar</span>' : '<span class="st st-out">Pendiente</span>'}</td></tr>
       <tr><td>Registro</td><td>${dateF(new Date(me.createdAt).getTime())}</td></tr>
@@ -1995,12 +2082,12 @@ const loginCount = uid => DB.sessions.filter(x => x.userId === uid).length;
 
 function adminPane(){
   if (acctTab === 'panel'){
-    const compradores = DB.users.filter(u => u.role !== 'administrador');
+    const compradores = DB.users.filter(u => !u.hidden);
     const conPuja = compradores.filter(u => bidsOf(u.id).length).length;
     const act = DB.sessions.filter(s => Date.now() - s.at < 864e5).length;
     return `<h2>Resumen general</h2><p class="lead">Estado de la plataforma y de los usuarios registrados.</p>
       <div class="kpis">
-        <div class="kpi"><b>${DB.users.length}</b><span>Cuentas registradas</span></div>
+        <div class="kpi"><b>${compradores.length}</b><span>Cuentas registradas</span></div>
         <div class="kpi"><b>${conPuja}</b><span>Usuarios con pujas activas</span></div>
         <div class="kpi good"><b>${act}</b><span>Inicios de sesión (24 h)</span></div>
         <div class="kpi"><b>${active().length}</b><span>Lotes en subasta</span></div>
@@ -2008,9 +2095,12 @@ function adminPane(){
       <h3 style="margin-bottom:10px">Últimos movimientos de todos los usuarios</h3>${globalMoves(12)}`;
   }
   if (acctTab === 'usuarios'){
-    return `<h2>Usuarios</h2><p class="lead">Todas las cuentas registradas con sus datos y su actividad.</p>
+    const visibles = DB.users.filter(u => !u.hidden);
+    if (!visibles.length) return `<h2>Usuarios</h2><p class="lead">Todas las cuentas registradas con sus datos y su actividad.</p>` +
+      emptyPane('Todavía no hay usuarios registrados', 'Cuando alguien cree su cuenta desde la página, aparecerá aquí con sus datos completos y su actividad.');
+    return `<h2>Usuarios</h2><p class="lead">${visibles.length} cuenta${visibles.length === 1 ? '' : 's'} registrada${visibles.length === 1 ? '' : 's'} con sus datos y su actividad.</p>
       <div class="table-wrap"><table class="t2"><thead><tr><th>Usuario</th><th>Correo</th><th>Tipo</th><th>Registro</th><th>Último acceso</th><th>Accesos</th><th>Pujas</th><th></th></tr></thead><tbody>
-      ${DB.users.map(u => { const [lbl, cls] = ROLE_ST[u.role]; const ll = lastLogin(u.id);
+      ${DB.users.filter(u => !u.hidden).map(u => { const [lbl, cls] = ROLE_ST[u.role]; const ll = lastLogin(u.id);
         return `<tr>
           <td><b>${u.name}</b>${u.city ? `<span class="muted" style="display:block;font-size:.82rem">${u.city}</span>` : ''}</td>
           <td data-l="Correo">${u.email}</td>
@@ -2073,8 +2163,10 @@ function adminUser(uid){
           <div class="kpi"><b>${loginCount(uid)}</b><span>Inicios de sesión</span></div>
         </div>
         <table class="t2" style="min-width:0"><tbody>
+          <tr><td>Documento</td><td>${u.doc ? `<b>${u.doc}</b>` : '<span class="muted">Sin registrar</span>'}</td></tr>
           <tr><td>Teléfono</td><td>${u.phone || '<span class="muted">Sin registrar</span>'}</td></tr>
           <tr><td>Ciudad</td><td>${u.city || '<span class="muted">Sin registrar</span>'}</td></tr>
+          <tr><td>Dirección</td><td>${u.address || '<span class="muted">Sin registrar</span>'}</td></tr>
           <tr><td>Registro</td><td>${dateF(new Date(u.createdAt).getTime())}</td></tr>
           <tr><td>Último acceso</td><td>${ll ? new Date(ll).toLocaleString('es-CO', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) + ` (${timeAgo(ll)})` : '<span class="muted">Nunca</span>'}</td></tr>
         </tbody></table>
@@ -2117,14 +2209,14 @@ setInterval(() => $$('[data-ends]').forEach(el => { el.textContent = (el.dataset
 /* =========================================================
    L. INICIO
    ========================================================= */
-if (!location.hash.startsWith('#cuenta')){ renderHero(); renderCats(); renderFilters(); renderResults(); }
+if (!location.hash.startsWith('#cuenta')){ renderHero(); renderCats(); renderEcoFeatured(); renderFilters(); renderResults(); }
 DB.load();
 
 if (SOLO){
   /* Pestaña independiente: solo se muestra la cuenta, sin el resto del sitio */
   document.body.classList.add('solo');
   const parts = location.hash.replace('#cuenta', '').replace(/^\//, '');
-  if (parts === 'login' || parts === 'registro'){ authMode = parts; }
+  if (parts === 'login' || parts === 'registro' || parts === 'admin'){ authMode = parts; }
   else if (parts){ acctTab = parts; }
   renderAccount();
   loadPhotos();

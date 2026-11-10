@@ -1748,8 +1748,9 @@ function feeTotal(amount){
 
 /* ---- Sesión ---- */
 function login(email, pass){
-  const u = DB.users.find(x => (x.email || '').toLowerCase() === String(email).trim().toLowerCase());
-  if (!u) return { ok:false, msg:'No existe una cuenta con ese correo.' };
+  const id = String(email).trim().toLowerCase();
+  const u = DB.users.find(x => (x.email || '').toLowerCase() === id || (x.user || '').toLowerCase() === id);
+  if (!u) return { ok:false, msg:'No existe una cuenta con esos datos.' };
   if (u.pass !== pass) return { ok:false, msg:'La contraseña no coincide.' };
   DB.session = u.id;
   DB.sessions.push({ userId:u.id, at: Date.now() });
@@ -1886,8 +1887,9 @@ function authHTML(){
       <input id="aCity" name="city" autocomplete="address-level2" required placeholder="Miami, FL">
       <label for="aAddr">Dirección</label>
       <input id="aAddr" name="address" autocomplete="street-address" placeholder="Opcional, para el traspaso y la entrega">` : ''}
-      <label for="aMail">Correo electrónico ${reg ? '<span class="req">*</span>' : ''}</label>
-      <input id="aMail" name="email" type="email" autocomplete="email" required placeholder="tucorreo@ejemplo.com">
+      <label for="aMail">${reg ? 'Correo electrónico <span class="req">*</span>' : 'Correo electrónico o usuario'}</label>
+      <input id="aMail" name="email" type="${reg ? 'email' : 'text'}" autocomplete="${reg ? 'email' : 'username'}" required
+             placeholder="${reg ? 'tucorreo@ejemplo.com' : 'tucorreo@ejemplo.com'}">
       <label for="aPass">Contraseña ${reg ? '<span class="req">*</span>' : ''}</label>
       <input id="aPass" name="pass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" required
              placeholder="${reg ? 'Mínimo 8 caracteres' : ''}">
@@ -1927,8 +1929,7 @@ function doAuth(form){
   } else {
     const r = login(d.email, d.pass);
     if (!r.ok) return fail(r.msg);
-    if (r.user.role === 'administrador'){ DB.session = null; DB.save(); return fail('Esta cuenta no se usa en el acceso público.'); }
-    toast(`Hola, ${r.user.name.split(' ')[0]}.`);
+    toast(r.user.role === 'administrador' ? 'Bienvenido al panel de administración.' : `Hola, ${r.user.name.split(' ')[0]}.`);
   }
   acctTab = null; renderAccount();
 }
@@ -2219,6 +2220,14 @@ if (SOLO){
   if (parts === 'login' || parts === 'registro' || parts === 'admin'){ authMode = parts; }
   else if (parts){ acctTab = parts; }
   renderAccount();
+  /* Permite escribir #cuenta/admin, #cuenta/login o #cuenta/registro en la barra
+     de direcciones estando ya en esta pestaña, sin tener que recargar */
+  window.addEventListener('hashchange', () => {
+    const t = location.hash.replace('#cuenta', '').replace(/^\//, '');
+    if (t === 'login' || t === 'registro' || t === 'admin'){ authMode = t; if (!DB.me()) return renderAccount(); }
+    else if (t){ acctTab = t; }
+    renderAccount();
+  });
   loadPhotos();
 } else {
   renderToday();

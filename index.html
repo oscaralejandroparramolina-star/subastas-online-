@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SUBASTAS ONLINE | Subastas de vehículos de Estados Unidos</title>
-<meta name="description" content="Subastas en línea de vehículos usados y siniestrados de Estados Unidos. Catálogo de referencia.">
+<meta name="description" content="Subastas en línea de vehículos embargados (reposición) de Estados Unidos. Catálogo de referencia.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -686,10 +686,10 @@ body.solo .acct-shell{display:block}
   <div class="wrap">
     <div>
       <h1>Subastas de vehículos 100 % en línea</h1>
-      <p class="hero-sub">Más de <b id="heroCount">0</b> carros, camionetas y SUV usados y siniestrados de Estados Unidos en subasta.</p>
+      <p class="hero-sub">Más de <b id="heroCount">0</b> carros, camionetas y SUV embargados de Estados Unidos en subasta.</p>
       <div class="step-cards">
         <div class="step"><div class="step-top"><b>1</b><h3>Regístrate</h3></div><p>Crea tu cuenta gratis y verifica tu identidad para ofertar.</p></div>
-        <div class="step"><div class="step-top"><b>2</b><h3>Encuentra</h3></div><p>Filtra por marca, año, daño, título y patio entre <strong id="heroActive">0</strong> lotes activos.</p></div>
+        <div class="step"><div class="step-top"><b>2</b><h3>Encuentra</h3></div><p>Filtra por marca, año, título y patio entre <strong id="heroActive">0</strong> lotes activos.</p></div>
         <div class="step"><div class="step-top"><b>3</b><h3>Oferta</h3></div><p>Participa en subastas en vivo de lunes a viernes.</p></div>
       </div>
       <a class="hero-cta" href="#inventario">Explorar el inventario</a>
@@ -1180,6 +1180,21 @@ MODELS_ECO.forEach(([brand, model, type, shape, basePrice, color], mi) => {
   }
 });
 
+/* =========================================================
+   B3. AJUSTES DEL CATÁLOGO
+   - Todos los lotes salen por embargo (reposición).
+   - Las pujas arrancan en US$8,000 y suben según las ofertas
+     que ya tiene cada lote (incremento fijo por lote).
+   ========================================================= */
+const MOTIVO = 'Embargo (reposición)';
+const PUJA_INICIAL = 8000;
+VEHICLES.forEach(v => {
+  v.damage = MOTIVO;
+  const inc = 50 + (Number(v.lot) % 3) * 50;               // 50, 100 o 150 por oferta
+  v.bid = PUJA_INICIAL + v.bids * inc;
+  v.retail = Math.max(v.retail, v.bid + 1500);
+});
+
 const isLive = v => !v.sold && v.ends - Date.now() < H && v.ends > Date.now();
 const active = () => VEHICLES.filter(v => !v.sold && v.ends > Date.now());
 
@@ -1474,7 +1489,7 @@ function renderFilters(){
     ${checkGroup('types', 'Tipo de vehículo', 'types', 'type', x => TYPE_LABEL[x])}
     ${rangeGroup('year', 'Año', `<div class="row2"><select data-range="yearMin" aria-label="Año desde">${yOpt(F.yearMin)}</select><select data-range="yearMax" aria-label="Año hasta">${yOpt(F.yearMax)}</select></div>`)}
     ${rangeGroup('miles', 'Odómetro', `<select data-range="milesMax" aria-label="Millas máximas"><option value="">Sin límite</option>${[25000, 50000, 75000, 100000].map(m => `<option value="${m}" ${String(F.milesMax) === String(m) ? 'selected' : ''}>Hasta ${num(m)} mi</option>`).join('')}</select>`)}
-    ${checkGroup('damages', 'Daño principal', 'damages', 'damage')}
+    ${checkGroup('damages', 'Motivo', 'damages', 'damage')}
     ${checkGroup('states', 'Ubicación (estado)', 'states', 'state')}
     ${rangeGroup('price', 'Puja actual (USD)', `<div class="row2"><input type="number" placeholder="Mínimo" data-range="priceMin" value="${F.priceMin}" aria-label="Precio mínimo"><input type="number" placeholder="Máximo" data-range="priceMax" value="${F.priceMax}" aria-label="Precio máximo"></div>`)}
   `;
@@ -1575,7 +1590,7 @@ function renderResults(){
   page = Math.min(page, pages);
   const slice = list.slice((page - 1) * perPage, page * perPage);
   const brandTxt = F.brands.size === 1 ? [...F.brands][0] + ' ' : '';
-  $('#resultsTitle').innerHTML = `<b>${list.length}</b> vehículos ${brandTxt}usados y siniestrados en subasta`;
+  $('#resultsTitle').innerHTML = `<b>${list.length}</b> vehículos ${brandTxt}embargados en subasta`;
   $('#crumbExtra').textContent = brandTxt ? '/ ' + brandTxt.trim() : '';
   $('#applyCount').textContent = list.length;
   renderChips();
@@ -1589,7 +1604,7 @@ function renderResults(){
 const headHTML = () => `<div class="r-head r-grid"><div>Imagen</div><div>Info del lote</div><div>Info del vehículo</div><div>Condición</div><div>Info de venta</div><div>Ofertas</div></div>`;
 function toggleView(){ view = view === 'list' ? 'grid' : 'list'; $('#viewBtn').textContent = view === 'list' ? 'Vista de cuadrícula' : 'Vista de lista'; renderResults(); }
 function exportCSV(){
-  const rows = [['Lote','Año','Marca','Modelo','Versión','Millas','Título','Daño','Patio','Puja USD','Valor estimado USD','Cierre']]
+  const rows = [['Lote','Año','Marca','Modelo','Versión','Millas','Título','Motivo','Patio','Puja USD','Valor estimado USD','Cierre']]
     .concat(filtered().map(v => [v.lot, v.year, v.brand, v.model, v.trim, v.miles, v.title, v.damage, v.yard, v.bid, v.retail, new Date(v.ends).toISOString()]));
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type:'text/csv' })); a.download = 'inventario-subastas.csv'; a.click();
@@ -1610,7 +1625,7 @@ function openLot(lot){
       <div><div class="v-name" style="color:var(--brand);font-weight:700;font-size:1.25rem;text-transform:uppercase">${fullName(v)}</div><div class="muted">Lote # ${v.lot}, ${v.state} - ${v.city}</div></div>
       <div class="facts">
         <div><span class="k">Odómetro</span>${num(v.miles)} mi</div><div><span class="k">Título</span>${v.title}</div>
-        <div><span class="k">Daño principal</span>${v.damage}</div><div><span class="k">Llaves</span>${v.keys ? 'Sí' : 'No'}</div>
+        <div><span class="k">Motivo</span>${v.damage}</div><div><span class="k">Llaves</span>${v.keys ? 'Sí' : 'No'}</div>
         <div><span class="k">Arranca y anda</span>${v.runs ? 'Sí' : 'No verificado'}</div><div><span class="k">Tipo</span>${TYPE_LABEL[v.type]}</div>
         <div><span class="k">Valor estimado</span>${usd(v.retail)}</div><div><span class="k">Cierre</span><span data-ends="${v.ends}">${left(v.ends - Date.now())}</span></div>
       </div>
@@ -1670,7 +1685,7 @@ function renderToday(){
 }
 function renderSold(){
   const sold = VEHICLES.filter(v => v.sold).sort((a, b) => b.ends - a.ends).slice(0, 40);
-  $('#soldTable').innerHTML = `<div class="table-wrap"><table><thead><tr><th>Imagen</th><th>Lote</th><th>Vehículo</th><th>Patio</th><th>Daño</th><th>Fecha</th><th>Ofertas</th><th>Precio final</th><th>Resultado</th></tr></thead><tbody>
+  $('#soldTable').innerHTML = `<div class="table-wrap"><table><thead><tr><th>Imagen</th><th>Lote</th><th>Vehículo</th><th>Patio</th><th>Motivo</th><th>Fecha</th><th>Ofertas</th><th>Precio final</th><th>Resultado</th></tr></thead><tbody>
     ${sold.map(v => `<tr><td><div class="thumb">${photo(v)}</div></td><td><a href="#" style="color:var(--brand);font-weight:600" onclick="event.preventDefault();openLot('${v.lot}')">${v.lot}</a></td><td><b>${v.year} ${v.brand} ${v.model}</b><br><small class="muted">${v.trim}, ${num(v.miles)} mi</small></td><td>${v.yard}</td><td>${v.damage}</td><td>${dateF(v.ends)}</td><td>${v.bids}</td><td><b>${usd(v.bid)}</b></td><td><span class="badge ${v.status === 'Vendido' ? 'badge-ok' : ''}">${v.status}</span></td></tr>`).join('')}
   </tbody></table></div>`;
 }

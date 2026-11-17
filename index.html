@@ -1659,6 +1659,7 @@ async function placeBid(lot){
     const m = /MIN_BID:(\d+(\.\d+)?)/.exec(error.message || '');
     await DB.load(); renderResults();
     if (m){ closeLot(); openLot(lot); return toast(`Otra persona ofertó antes. La oferta mínima ahora es ${usd(+m[1])}.`); }
+    if (/LOT_CLOSED/.test(error.message || '')){ closeLot(); return toast('Esta subasta ya fue cerrada por el administrador.'); }
     return toast('No se pudo registrar la oferta. Inténtalo de nuevo.');
   }
   watched.add(v.lot);
@@ -1746,11 +1747,17 @@ const DB = {
   },
   /* Puja más alta compartida de cada lote (visible para todos) */
   async loadLots(){
-    const { data } = await sb.from('lot_state').select('lot,bid,extra_bids');
+    const { data } = await sb.from('lot_state').select('lot,bid,extra_bids,closed,winner,closed_at');
     (data || []).forEach(r => {
       const v = VEHICLES.find(x => x.lot === r.lot); if (!v) return;
       if (v.baseBid === undefined){ v.baseBid = v.bid; v.baseBids = v.bids; }
       v.bid = +r.bid; v.bids = v.baseBids + r.extra_bids;
+      /* Lote cerrado por el administrador: pasa a resultados */
+      if (r.closed){
+        v.sold = true; v.closedByAdmin = true; v.winner = r.winner;
+        v.status = r.winner ? 'Vendido' : 'Desierta';
+        v.ends = Math.min(v.ends, ts(r.closed_at));
+      }
     });
   },
   save(){ /* ya no hace falta: todo se guarda en Supabase */ },
@@ -2007,7 +2014,7 @@ async function doAdminAuth(form){
 let acctTab = null;
 function setAcctTab(k){ acctTab = k; if (SOLO) history.replaceState(null, '', '#cuenta/' + k); renderAccount(); }
 const USER_TABS = [['resumen','Resumen'],['pujas','Mis pujas'],['movimientos','Mis movimientos'],['adjudicaciones','Adjudicaciones'],['avisos','Avisos'],['perfil','Mi perfil']];
-const ADMIN_TABS = [['panel','Resumen'],['usuarios','Usuarios'],['accesos','Inicios de sesión'],['actividad','Actividad global'],['lotes','Subastas']];
+const ADMIN_TABS = [['panel','Resumen'],['aprobar','Aprobar pujas'],['usuarios','Usuarios'],['accesos','Inicios de sesión'],['actividad','Actividad global'],['lotes','Subastas']];
 
 function openAccountShell(){
   if (SOLO){ renderAccount(); return; }
@@ -2034,7 +2041,7 @@ function renderAccount(){
       <div class="acct-user"><span class="avatar">${ini}</span><span><b>${me.name}</b><small>${me.email}</small>
         <span class="st ${admin ? 'st-adm' : 'st-com'}" style="margin-top:4px;display:inline-block">${admin ? 'Administrador' : 'Comprador'}</span></span></div>
       <nav class="acct-nav">${tabs.map(([k, l]) => `<button aria-current="${acctTab === k}" onclick="setAcctTab('${k}')">
-        <span>${l}</span>${k === 'avisos' && unread ? `<span class="pill">${unread}</span>` : ''}</button>`).join('')}
+        <span>${l}</span>${k === 'avisos' && unread ? `<span class="pill">${unread}</span>` : ''}${k === 'aprobar' && admin && pendingLots().length ? `<span class="pill">${pendingLots().length}</span>` : ''}</button>`).join('')}
         <button onclick="logout()" style="color:#C2281B">Cerrar sesión</button></nav>
     </aside>
     <div class="acct-main">${admin ? adminPane() : userPane()}</div>
@@ -2134,6 +2141,77 @@ const ROLE_ST = { administrador:['Administrador','st-adm'], vendedor:['Vendedor'
 const lastLogin = uid => { const s = DB.sessions.filter(x => x.userId === uid).map(x => x.at); return s.length ? Math.max(...s) : null; };
 const loginCount = uid => DB.sessions.filter(x => x.userId === uid).length;
 
+/* ---- Aprobación de pujas ---- */
+const lotBids = lot => Object.entries(DB.myBids)
+  .flatMap(([uid, lots]) => lots[lot] ? [{ ...lots[lot], user: DB.user(uid) || { id:uid, name:'Usuario', email:'' } }] : [])
+  .sort((a, b) => b.amount - a.amount || a.at - b.at);
+const lotsWhere = test => [...new Set(Object.values(DB.myBids).flatMap(l => Object.values(l).filter(test).map(b => b.lot)))]
+  .map(lot => ({ lot, v: VEHICLES.find(x => x.lot === lot), bids: lotBids(lot) })).filter(x => x.v);
+const pendingLots = () => lotsWhere(b => b.state === 'ganando' || b.state === 'superado')
+  .sort((a, b) => a.v.ends - b.v.ends);
+const resolvedLots = () => lotsWhere(b => b.state === 'ganada' || b.state === 'perdida')
+  .filter(x => !x.bids.some(b => b.state === 'ganando' || b.state === 'superado'))
+  .sort((a, b) => Math.max(...b.bids.map(x => x.at)) - Math.max(...a.bids.map(x => x.at)));
+
+function approvePane(){
+  const pend = pendingLots(), done = resolvedLots().slice(0, 30);
+  const fmtDT = t => new Date(t).toLocaleString('es-CO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  const pendHTML = pend.length ? pend.map(({ lot, v, bids }) => {
+    const closed = v.ends <= Date.now();
+    return `<div style="border:1px solid var(--line);border-radius:12px;margin-bottom:16px;padding:16px;background:#fff">
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <div class="mini" style="width:110px">${photo(v)}</div>
+        <div style="flex:1;min-width:200px"><button class="linkish" style="font-weight:700;font-size:1.05rem" onclick="openLot('${lot}')">${fullName(v)}</button>
+          <span class="muted" style="display:block;font-size:.88rem">Lote ${lot} · ${v.yard} · ${bids.length} postor${bids.length === 1 ? '' : 'es'}</span></div>
+        <div style="text-align:right"><span class="muted" style="display:block;font-size:.8rem">${closed ? 'Subasta' : 'Cierra en'}</span>
+          <b>${closed ? 'Cerrada, falta aprobar' : `<span data-ends="${v.ends}">${left(v.ends - Date.now())}</span>`}</b></div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px"><table class="t2" style="min-width:0"><thead><tr><th>Postor</th><th>Oferta</th><th>Última oferta</th><th>Estado</th><th></th></tr></thead><tbody>
+        ${bids.map((b, i) => `<tr>
+          <td><b>${b.user.name}</b><span class="muted" style="display:block;font-size:.8rem">${b.user.email}</span></td>
+          <td data-l="Oferta"><b>${usd(b.amount)}</b>${i === 0 ? ' <span class="st st-win">Más alta</span>' : ''}</td>
+          <td data-l="Última oferta">${fmtDT(b.at)}</td>
+          <td data-l="Estado"><span class="st ${(STATE_LBL[b.state] || [])[1] || 'st-end'}">${b.state === 'ganando' ? 'Va ganando' : 'Superado'}</span></td>
+          <td><button class="btn ${i === 0 ? 'btn-brand' : 'btn-line'} btn-sm" onclick="adminResolve('${lot}','${b.user.id}')">Aprobar y adjudicar</button></td>
+        </tr>`).join('')}
+      </tbody></table></div>
+      <div style="margin-top:10px;text-align:right"><button class="btn btn-line btn-sm" onclick="adminResolve('${lot}', null)">Declarar desierta</button></div>
+    </div>`; }).join('')
+    : emptyPane('No hay pujas pendientes', 'Cuando los usuarios oferten, los lotes aparecerán aquí para que apruebes la puja ganadora.');
+  const doneHTML = done.length ? `<div class="table-wrap"><table class="t2"><thead><tr><th>Lote</th><th>Vehículo</th><th>Resultado</th><th>Precio</th><th>Postores</th><th>Fecha</th></tr></thead><tbody>
+    ${done.map(({ lot, v, bids }) => { const w = bids.find(b => b.state === 'ganada');
+      return `<tr><td><button class="linkish" onclick="openLot('${lot}')">${lot}</button></td><td data-l="Vehículo">${fullName(v)}</td>
+        <td data-l="Resultado">${w ? `<span class="st st-win">Ganó ${w.user.name}</span>` : '<span class="st st-end">Desierta</span>'}</td>
+        <td data-l="Precio">${w ? `<b>${usd(w.amount)}</b>` : '—'}</td><td data-l="Postores">${bids.length}</td>
+        <td data-l="Fecha">${dateF(Math.max(...bids.map(b => b.at)))}</td></tr>`; }).join('')}
+    </tbody></table></div>` : emptyPane('Sin subastas resueltas', 'Aquí verás cada lote que adjudiques.');
+  return `<h2>Aprobar pujas</h2>
+    <p class="lead">Lotes con ofertas esperando tu decisión. Al aprobar una puja, el lote se adjudica a ese usuario y cada postor recibe en su cuenta un aviso de si ganó o perdió.</p>
+    ${pendHTML}
+    <h3 style="margin:26px 0 10px">Subastas resueltas</h3>${doneHTML}`;
+}
+let resolving = false;
+async function adminResolve(lot, uid){
+  if (resolving) return;
+  const v = VEHICLES.find(x => x.lot === lot); if (!v) return;
+  const b = uid ? lotBids(lot).find(x => x.user.id === uid) : null;
+  const plain = s => { const t = document.createElement('textarea'); t.innerHTML = s; return t.value; };
+  const msg = b
+    ? `¿Aprobar la puja de ${usd(b.amount)} de ${plain(b.user.name)} y adjudicarle ${fullName(v)}?\n\nSe le avisará que ganó y a los demás postores que perdieron. No se puede deshacer.`
+    : `¿Declarar desierta la subasta de ${fullName(v)}?\n\nSe avisará a todos los postores que no se adjudicó. No se puede deshacer.`;
+  if (!confirm(msg)) return;
+  resolving = true;
+  const { error } = await sb.rpc('admin_resolve_lot', { p_lot: lot, p_winner: uid, p_vehicle: fullName(v) });
+  resolving = false;
+  if (error){
+    const m = error.message || '';
+    toast(m.includes('ALREADY_CLOSED') ? 'Este lote ya estaba cerrado.' : m.includes('NOT_ADMIN') ? 'Solo el administrador puede aprobar pujas.' : 'No se pudo cerrar la subasta. Inténtalo de nuevo.');
+  } else {
+    toast(b ? `Lote ${lot} adjudicado a ${plain(b.user.name)}. Ya se avisó a todos los postores.` : `Subasta del lote ${lot} declarada desierta.`);
+  }
+  await DB.load(); renderAccount();
+}
+
 function adminPane(){
   if (acctTab === 'panel'){
     const compradores = DB.users.filter(u => !u.hidden);
@@ -2146,8 +2224,12 @@ function adminPane(){
         <div class="kpi good"><b>${act}</b><span>Inicios de sesión (24 h)</span></div>
         <div class="kpi"><b>${active().length}</b><span>Lotes en subasta</span></div>
       </div>
+      ${pendingLots().length ? `<div class="empty2" style="margin-bottom:18px;text-align:left"><b>${pendingLots().length} lote${pendingLots().length === 1 ? '' : 's'} con pujas esperando tu aprobación</b>
+        Revisa las ofertas y adjudica cada subasta para avisar a los postores.
+        <div style="margin-top:12px"><button class="btn btn-brand btn-sm" onclick="setAcctTab('aprobar')">Aprobar pujas</button></div></div>` : ''}
       <h3 style="margin-bottom:10px">Últimos movimientos de todos los usuarios</h3>${globalMoves(12)}`;
   }
+  if (acctTab === 'aprobar') return approvePane();
   if (acctTab === 'usuarios'){
     const visibles = DB.users.filter(u => !u.hidden);
     if (!visibles.length) return `<h2>Usuarios</h2><p class="lead">Todas las cuentas registradas con sus datos y su actividad.</p>` +

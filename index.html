@@ -807,6 +807,7 @@ body.solo .acct-shell{display:block}
 <div id="modalRoot"></div>
 <div id="toastRoot" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* =========================================================
    A. MODELOS BASE (80 modelos reales, agrupados por categoría)
@@ -1625,30 +1626,31 @@ function openLot(lot){
   loadMissing();
 }
 function closeLot(){ $('#modalRoot').innerHTML = ''; }
-function placeBid(lot){
+/* La oferta se valida y se guarda en Supabase (función place_bid):
+   sube la puja del lote, marca como superados a los demás y les avisa. */
+let bidding = false;
+async function placeBid(lot){
   const me = DB.me();
   if (!me){ closeLot(); toast('Inicia sesión para poder ofertar.'); return goAuth('login'); }
+  if (bidding) return;
   const v = VEHICLES.find(x => x.lot === lot), amt = +$('#mAmt').value, min = v.bid + step(v);
   if (!amt || amt < min) return toast(`La oferta mínima es ${usd(min)}.`);
-  // Si otra persona ya tenía la oferta más alta en este lote, queda superada
-  const mine = DB.myBids[me.id] = DB.myBids[me.id] || {};
-  const prev = mine[lot];
-  v.bid = amt; v.bids++; watched.add(v.lot);
-  mine[lot] = { lot, amount: amt, state: 'ganando', at: Date.now() };
-  // Si otro usuario tenía la punta en este lote, su oferta queda superada y se le avisa
-  Object.entries(DB.myBids).forEach(([oid, lots]) => {
-    if (oid !== me.id && lots[lot] && lots[lot].state === 'ganando'){
-      lots[lot].state = 'superado';
-      logMove(oid, 'superado', `Te superaron en el lote ${lot}: la puja subió a ${usd(amt)}`, lot);
-      pushNotif(oid, 'out', 'Te superaron la oferta', `${fullName(v)} va en ${usd(amt)}. Oferta mínima para recuperar la punta: ${usd(amt + step(v))}.`, lot);
-    }
+  bidding = true;
+  const { data, error } = await sb.rpc('place_bid', {
+    p_lot: lot, p_amount: amt, p_base_bid: v.baseBid ?? v.bid, p_step: step(v), p_vehicle: fullName(v)
   });
-  logMove(me.id, 'oferta', `Ofertaste ${usd(amt)} en el lote ${lot}`, lot);
-  pushNotif(me.id, 'inf', 'Oferta registrada', `Tu oferta de ${usd(amt)} es la más alta en ${fullName(v)}.`, lot);
-  if (prev && prev.state === 'superado') logMove(me.id, 'oferta', `Recuperaste la oferta más alta en el lote ${lot}`, lot);
-  DB.save(); renderSessionUI();
-  closeLot(); renderResults(); if (!$('#cuenta').hidden) renderAccount();
-  toast(`Oferta de ${usd(amt)} registrada en el lote ${lot}.`);
+  bidding = false;
+  if (error){
+    const m = /MIN_BID:(\d+(\.\d+)?)/.exec(error.message || '');
+    await DB.load(); renderResults();
+    if (m){ closeLot(); openLot(lot); return toast(`Otra persona ofertó antes. La oferta mínima ahora es ${usd(+m[1])}.`); }
+    return toast('No se pudo registrar la oferta. Inténtalo de nuevo.');
+  }
+  watched.add(v.lot);
+  await DB.load(); renderSessionUI();
+  closeLot();
+  if (SOLO) renderAccount(); else renderResults();
+  toast(`Oferta de ${usd(data.bid)} registrada en el lote ${lot}.`);
 }
 function loadMissing(){ $$('[data-photo]').forEach(el => { const k = el.dataset.photo; if (PHOTOS[k] && !el.querySelector('img')) el.insertAdjacentHTML('beforeend', imgTag(k, el.dataset.alt)); }); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeLot(); $$('.nav li.open').forEach(x => x.classList.remove('open')); } });
@@ -1675,67 +1677,78 @@ function renderSold(){
 
 
 /* =========================================================
-   M. CUENTAS, SESIÓN Y MOVIMIENTOS
-   Demostración: los datos viven en el navegador (localStorage).
-   En producción: Supabase Auth + tablas profiles, bids,
-   audit_log y notifications del archivo SQL del proyecto.
+   M. CUENTAS, SESIÓN Y MOVIMIENTOS (Supabase)
+   Las cuentas usan Supabase Auth. Pujas, movimientos, avisos
+   e inicios de sesión viven en las tablas bids, audit_log,
+   notifications y login_events, protegidas con RLS: cada
+   usuario solo ve lo suyo y el administrador ve todo.
+   La clave publicable es pública por diseño; la seguridad la
+   dan las reglas RLS de la base de datos.
    ========================================================= */
-const STORE_KEY = 'subastas-online-cuentas-v1';
+const SUPABASE_URL = 'https://eojtmzvpzqkyaqpabjgg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_nEqjvtMnjX7Lk2_q8e8IRw_n_XY6uXj';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 /* SOLO = la página se abrió como pestaña de cuenta (dirección con #cuenta) */
 const SOLO = location.hash.startsWith('#cuenta');
 
-/* ---------------------------------------------------------
-   CUENTA DE ADMINISTRADOR
-   Es la única cuenta que viene creada. No aparece en el
-   registro público ni en la pantalla de acceso normal:
-   se entra por la dirección  #cuenta/admin
-   Cambia estos dos valores por los tuyos antes de publicar.
-   --------------------------------------------------------- */
-const ADMIN_USER = 'admin.subastas';
-const ADMIN_PASS = 'SubAstas2026#Adm';
-const ADMIN_ACCOUNT = {
-  id:'u_admin', user:ADMIN_USER, email:'admin@subastasonline.co', pass:ADMIN_PASS,
-  name:'Administrador', role:'administrador', phone:'', city:'', verified:true,
-  createdAt:new Date().toISOString(), hidden:true
-};
+/* Escapa texto escrito por usuarios antes de mostrarlo en la página */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const ts = d => new Date(d).getTime();
+
+const toUser = p => ({
+  id:p.id, email:esc(p.email), name:esc(p.name) || 'Usuario', doc:esc(p.doc), phone:esc(p.phone),
+  city:esc(p.city), address:esc(p.address), role:p.role, verified:p.verified,
+  createdAt:p.created_at, hidden:p.role === 'administrador'
+});
 
 const DB = {
-  users: [], sessions: [], moves: [], notifs: [], myBids: {}, session: null,
-  load(){
-    let raw = null;
-    try { raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) {}
-    if (raw && raw.users){
-      Object.assign(this, raw);
-    } else {
-      this.users = []; this.sessions = []; this.moves = []; this.notifs = []; this.myBids = {}; this.session = null;
+  users: [], sessions: [], moves: [], notifs: [], myBids: {}, session: null, ready: false,
+  /* Carga desde Supabase lo que el usuario actual puede ver */
+  async load(){
+    await this.loadLots();
+    const { data:{ session } } = await sb.auth.getSession();
+    this.users = []; this.sessions = []; this.moves = []; this.notifs = []; this.myBids = {}; this.session = null;
+    if (session){
+      const uid = session.user.id;
+      const [profiles, bids, moves, notifs, logins] = await Promise.all([
+        sb.from('profiles').select('*').order('created_at'),
+        sb.from('bids').select('*'),
+        sb.from('audit_log').select('*').order('created_at', { ascending:false }).limit(1000),
+        sb.from('notifications').select('*').eq('user_id', uid).order('created_at', { ascending:false }).limit(200),
+        sb.from('login_events').select('*').order('created_at', { ascending:false }).limit(1000)
+      ]);
+      this.users = (profiles.data || []).map(toUser);
+      if (this.users.some(u => u.id === uid)) this.session = uid;
+      (bids.data || []).forEach(b => {
+        (this.myBids[b.user_id] = this.myBids[b.user_id] || {})[b.lot] = { lot:b.lot, amount:+b.amount, state:b.state, at:ts(b.updated_at) };
+      });
+      this.moves = (moves.data || []).map(m => ({ id:m.id, userId:m.user_id, type:m.type, text:esc(m.text), lot:m.lot, at:ts(m.created_at) }));
+      this.notifs = (notifs.data || []).map(n => ({ id:n.id, userId:n.user_id, kind:n.kind, title:esc(n.title), text:esc(n.text), lot:n.lot, at:ts(n.created_at), read:n.read }));
+      this.sessions = (logins.data || []).map(s => ({ userId:s.user_id, at:ts(s.created_at) }));
     }
-    /* La cuenta de administrador siempre existe y se mantiene al día */
-    const i = this.users.findIndex(u => u.id === 'u_admin');
-    if (i === -1) this.users.push({ ...ADMIN_ACCOUNT });
-    else this.users[i] = { ...this.users[i], user:ADMIN_USER, pass:ADMIN_PASS, role:'administrador', hidden:true };
-    this.save();
+    this.ready = true;
   },
-  save(){
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({
-        users:this.users, sessions:this.sessions, moves:this.moves,
-        notifs:this.notifs, myBids:this.myBids, session:this.session
-      }));
-    } catch (e) {}
+  /* Puja más alta compartida de cada lote (visible para todos) */
+  async loadLots(){
+    const { data } = await sb.from('lot_state').select('lot,bid,extra_bids');
+    (data || []).forEach(r => {
+      const v = VEHICLES.find(x => x.lot === r.lot); if (!v) return;
+      if (v.baseBid === undefined){ v.baseBid = v.bid; v.baseBids = v.bids; }
+      v.bid = +r.bid; v.bids = v.baseBids + r.extra_bids;
+    });
   },
+  save(){ /* ya no hace falta: todo se guarda en Supabase */ },
   user(id){ return this.users.find(u => u.id === id) || null; },
   me(){ return this.session ? this.user(this.session) : null; }
 };
 
-/* Registro de movimientos (equivale a la tabla audit_log del SQL) */
-function logMove(userId, type, text, lot = null, at = Date.now()){
-  DB.moves.unshift({ id: 'mv' + Math.random().toString(36).slice(2, 9), userId, type, text, lot, at });
-  DB.save();
-}
-/* Notificación dentro de la plataforma (tabla notifications del SQL) */
-function pushNotif(userId, kind, title, text, lot = null, at = Date.now()){
-  DB.notifs.unshift({ id: 'nt' + Math.random().toString(36).slice(2, 9), userId, kind, title, text, lot, at, read:false });
-  DB.save();
+/* Registro de acceso propio (las ofertas las registra la base de datos) */
+async function logAccess(userId, text){
+  await Promise.all([
+    sb.from('login_events').insert({ user_id:userId }),
+    sb.from('audit_log').insert({ user_id:userId, type:'acceso', text })
+  ]);
 }
 const myNotifs = () => DB.session ? DB.notifs.filter(n => n.userId === DB.session) : [];
 const unreadCount = () => myNotifs().filter(n => !n.read).length;
@@ -1746,19 +1759,29 @@ function feeTotal(amount){
   return { premium, vat, total: amount + premium + vat };
 }
 
+/* Traduce los errores de Supabase a mensajes claros */
+function authMsg(error){
+  const m = (error && error.message || '').toLowerCase();
+  if (m.includes('invalid login')) return 'Correo o contraseña incorrectos.';
+  if (m.includes('email not confirmed')) return 'Confirma tu correo: te enviamos un enlace al registrarte.';
+  if (m.includes('already registered') || m.includes('already been registered')) return 'Ya existe una cuenta con ese correo.';
+  if (m.includes('database error')) return 'Ya existe una cuenta con ese documento.';
+  if (m.includes('rate limit')) return 'Demasiados intentos. Espera unos minutos y vuelve a intentarlo.';
+  if (m.includes('password')) return 'La contraseña no cumple los requisitos de seguridad.';
+  return 'No se pudo completar la operación. Inténtalo de nuevo.';
+}
+
 /* ---- Sesión ---- */
-function login(email, pass){
-  const id = String(email).trim().toLowerCase();
-  const u = DB.users.find(x => (x.email || '').toLowerCase() === id || (x.user || '').toLowerCase() === id);
-  if (!u) return { ok:false, msg:'No existe una cuenta con esos datos.' };
-  if (u.pass !== pass) return { ok:false, msg:'La contraseña no coincide.' };
-  DB.session = u.id;
-  DB.sessions.push({ userId:u.id, at: Date.now() });
-  logMove(u.id, 'acceso', 'Inicio de sesión');
-  DB.save(); renderSessionUI();
+async function login(email, pass){
+  const { data, error } = await sb.auth.signInWithPassword({ email:String(email).trim().toLowerCase(), password:pass });
+  if (error) return { ok:false, msg:authMsg(error) };
+  await logAccess(data.user.id, 'Inicio de sesión');
+  await DB.load(); renderSessionUI();
+  const u = DB.me();
+  if (!u) return { ok:false, msg:'Tu cuenta no tiene perfil. Escríbenos para revisarla.' };
   return { ok:true, user:u };
 }
-function registerUser(d){
+async function registerUser(d){
   const name = String(d.name || '').trim();
   const email = String(d.email || '').trim().toLowerCase();
   const pass = String(d.pass || '');
@@ -1772,20 +1795,23 @@ function registerUser(d){
   if (pass.length < 8) return { ok:false, msg:'La contraseña debe tener al menos 8 caracteres.' };
   if (doc.length < 5) return { ok:false, msg:'Escribe un número de documento válido.' };
   if (phone.replace(/\D/g, '').length < 7) return { ok:false, msg:'Escribe un teléfono válido.' };
-  if (DB.users.some(u => (u.email || '').toLowerCase() === email)) return { ok:false, msg:'Ya existe una cuenta con ese correo.' };
-  if (DB.users.some(u => u.doc && u.doc === doc)) return { ok:false, msg:'Ya existe una cuenta con ese documento.' };
-  const u = { id:'u' + Math.random().toString(36).slice(2, 8), email, pass, name, doc, phone, city, address,
-              role:'comprador', verified:true, createdAt:new Date().toISOString() };
-  DB.users.push(u); DB.session = u.id;
-  DB.sessions.push({ userId:u.id, at: Date.now() });
-  logMove(u.id, 'registro', `Cuenta creada: ${name}, ${city}`);
-  pushNotif(u.id, 'inf', 'Bienvenido a SUBASTAS ONLINE', 'Tu cuenta está lista. Explora el inventario y haz tu primera oferta.');
-  DB.save(); renderSessionUI();
-  return { ok:true, user:u };
+  const { data, error } = await sb.auth.signUp({
+    email, password:pass,
+    options:{ data:{ name, doc, phone, city, address }, emailRedirectTo: location.origin + location.pathname + '#cuenta' }
+  });
+  if (error) return { ok:false, msg:authMsg(error) };
+  /* Supabase devuelve un usuario sin identidades si el correo ya existía */
+  if (data.user && data.user.identities && !data.user.identities.length) return { ok:false, msg:'Ya existe una cuenta con ese correo.' };
+  if (!data.session) return { ok:true, pending:true };
+  await logAccess(data.user.id, 'Inicio de sesión');
+  await DB.load(); renderSessionUI();
+  return { ok:true, user:DB.me() };
 }
-function logout(){
-  const me = DB.me(); if (me) logMove(me.id, 'acceso', 'Cierre de sesión');
-  DB.session = null; DB.save(); renderSessionUI();
+async function logout(){
+  const me = DB.me();
+  if (me) await sb.from('audit_log').insert({ user_id:me.id, type:'acceso', text:'Cierre de sesión' });
+  await sb.auth.signOut();
+  await DB.load(); renderSessionUI();
   if (SOLO){
     const wasAdmin = me && me.role === 'administrador';
     authMode = wasAdmin ? 'admin' : 'login';
@@ -1794,6 +1820,7 @@ function logout(){
   }
   toast('Sesión cerrada.');
 }
+
 const BELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 16V11a6 6 0 1 0-12 0v5l-1.5 2.5h15L18 16z" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" stroke-linecap="round"/></svg>';
 const initials = n => n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 const roleLabel = u => u.role === 'administrador' ? 'Administrador' : 'Comprador';
@@ -1852,10 +1879,15 @@ function toggleNotifs(){
   </div>`;
   $('#bell').setAttribute('aria-expanded','true');
 }
-function markAllRead(){ myNotifs().forEach(n => n.read = true); DB.save(); renderSessionUI(); toggleNotifs(); toggleNotifs(); }
+function markAllRead(){
+  const ids = myNotifs().filter(n => !n.read).map(n => n.id);
+  myNotifs().forEach(n => n.read = true); renderSessionUI(); toggleNotifs(); toggleNotifs();
+  if (ids.length) sb.from('notifications').update({ read:true }).in('id', ids).then(() => {});
+}
 function openNotif(id){
-  const n = DB.notifs.find(x => x.id === id); if (!n) return;
-  n.read = true; DB.save(); renderSessionUI();
+  const n = DB.notifs.find(x => String(x.id) === String(id)); if (!n) return;
+  if (!n.read){ n.read = true; sb.from('notifications').update({ read:true }).eq('id', n.id).then(() => {}); }
+  renderSessionUI();
   $('#notifRoot').innerHTML = '';
   if (n.lot) openLot(n.lot); else if (SOLO) setAcctTab('avisos'); else openAccountTab('avisos');
 }
@@ -1887,8 +1919,8 @@ function authHTML(){
       <input id="aCity" name="city" autocomplete="address-level2" required placeholder="Miami, FL">
       <label for="aAddr">Dirección</label>
       <input id="aAddr" name="address" autocomplete="street-address" placeholder="Opcional, para el traspaso y la entrega">` : ''}
-      <label for="aMail">${reg ? 'Correo electrónico <span class="req">*</span>' : 'Correo electrónico o usuario'}</label>
-      <input id="aMail" name="email" type="${reg ? 'email' : 'text'}" autocomplete="${reg ? 'email' : 'username'}" required
+      <label for="aMail">Correo electrónico ${reg ? '<span class="req">*</span>' : ''}</label>
+      <input id="aMail" name="email" type="email" autocomplete="${reg ? 'email' : 'username'}" required
              placeholder="${reg ? 'tucorreo@ejemplo.com' : 'tucorreo@ejemplo.com'}">
       <label for="aPass">Contraseña ${reg ? '<span class="req">*</span>' : ''}</label>
       <input id="aPass" name="pass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" required
@@ -1908,42 +1940,48 @@ function authHTML(){
 function adminAuthHTML(){
   return `<div class="wrap"><div class="auth">
     <h2>Acceso de administración</h2>
-    <p class="lead">Área restringida. Ingresa con tu usuario de administrador.</p>
+    <p class="lead">Área restringida. Ingresa con el correo de tu cuenta de administrador.</p>
     <form onsubmit="event.preventDefault();doAdminAuth(this)">
-      <label for="adU">Usuario</label><input id="adU" name="user" autocomplete="username" required>
+      <label for="adU">Correo electrónico</label><input id="adU" name="user" type="email" autocomplete="username" required>
       <label for="adP">Contraseña</label><input id="adP" name="pass" type="password" autocomplete="current-password" required>
       <button class="btn btn-brand" type="submit">Entrar al panel</button>
       <p class="err" id="authErr" hidden></p>
     </form>
   </div></div>`;
 }
-function doAuth(form){
+async function doAuth(form){
   const d = Object.fromEntries(new FormData(form)), err = $('#authErr');
-  const fail = m => { err.hidden = false; err.textContent = m; };
+  const btn = form.querySelector('button[type="submit"]');
+  const fail = m => { err.hidden = false; err.textContent = m; btn.disabled = false; };
+  btn.disabled = true; err.hidden = true;
   if (authMode === 'registro'){
     if (d.pass !== d.pass2) return fail('Las dos contraseñas no coinciden.');
     if (!d.terms) return fail('Debes aceptar las condiciones para crear la cuenta.');
-    const r = registerUser(d);
+    const r = await registerUser(d);
     if (!r.ok) return fail(r.msg);
+    if (r.pending){
+      $('#acctRoot').innerHTML = `<div class="wrap"><div class="auth"><h2>Revisa tu correo</h2>
+        <p class="lead">Te enviamos un enlace a <b>${esc(d.email)}</b> para confirmar tu cuenta. Ábrelo y quedarás dentro, listo para ofertar.</p>
+        <button class="linkish" onclick="goAuth('login')">Volver a iniciar sesión</button></div></div>`;
+      return;
+    }
     toast(`Bienvenido, ${r.user.name.split(' ')[0]}.`);
   } else {
-    const r = login(d.email, d.pass);
+    const r = await login(d.email, d.pass);
     if (!r.ok) return fail(r.msg);
     toast(r.user.role === 'administrador' ? 'Bienvenido al panel de administración.' : `Hola, ${r.user.name.split(' ')[0]}.`);
   }
   acctTab = null; renderAccount();
 }
-function doAdminAuth(form){
+async function doAdminAuth(form){
   const d = Object.fromEntries(new FormData(form)), err = $('#authErr');
-  const u = DB.users.find(x => x.id === 'u_admin');
-  if (!u || String(d.user).trim() !== u.user || d.pass !== u.pass){
-    err.hidden = false; err.textContent = 'Usuario o contraseña incorrectos.';
-    return;
+  const fail = m => { err.hidden = false; err.textContent = m; };
+  const r = await login(d.user, d.pass);
+  if (!r.ok) return fail(r.msg);
+  if (r.user.role !== 'administrador'){
+    await sb.auth.signOut(); await DB.load(); renderSessionUI();
+    return fail('Esta cuenta no tiene permisos de administrador.');
   }
-  DB.session = u.id;
-  DB.sessions.push({ userId:u.id, at: Date.now() });
-  logMove(u.id, 'acceso', 'Inicio de sesión del administrador');
-  DB.save();
   acctTab = null; renderAccount();
   toast('Bienvenido al panel de administración.');
 }
@@ -2211,7 +2249,29 @@ setInterval(() => $$('[data-ends]').forEach(el => { el.textContent = (el.dataset
    L. INICIO
    ========================================================= */
 if (!location.hash.startsWith('#cuenta')){ renderHero(); renderCats(); renderEcoFeatured(); renderFilters(); renderResults(); }
-DB.load();
+if (SOLO) $('#acctRoot').innerHTML = '<div class="wrap"><div class="auth"><p class="lead">Cargando tu cuenta…</p></div></div>';
+
+(async () => {
+await DB.load();
+if (!SOLO) renderResults();
+
+/* Si la sesión cambia en otra pestaña (o llega desde el enlace del correo), se actualiza sola */
+let lastUid = DB.session;
+sb.auth.onAuthStateChange((event, session) => {
+  const uid = session ? session.user.id : null;
+  if (uid === lastUid) return;
+  lastUid = uid;
+  setTimeout(async () => {
+    await DB.load(); renderSessionUI();
+    if (SOLO) renderAccount(); else renderResults();
+  }, 0);
+});
+/* Refresca pujas y avisos cada 20 segundos para ver las ofertas de otros */
+setInterval(async () => {
+  if (document.hidden || $('#modalRoot').innerHTML) return;
+  await DB.load(); renderSessionUI();
+  if (SOLO){ if (DB.me()) renderAccount(); } else if (!$('#notifRoot').innerHTML) renderResults();
+}, 20000);
 
 if (SOLO){
   /* Pestaña independiente: solo se muestra la cuenta, sin el resto del sitio */
@@ -2234,9 +2294,8 @@ if (SOLO){
   renderSold();
   renderSessionUI();
   loadPhotos();
-  /* Si la sesión cambia en otra pestaña, esta se actualiza sola */
-  window.addEventListener('storage', e => { if (e.key === STORE_KEY){ DB.load(); renderSessionUI(); } });
 }
+})();
 </script>
 </body>
 </html>

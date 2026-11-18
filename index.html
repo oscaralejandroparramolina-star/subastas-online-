@@ -1719,21 +1719,23 @@ const toUser = p => ({
 });
 
 const DB = {
-  users: [], sessions: [], moves: [], notifs: [], myBids: {}, session: null, ready: false,
+  users: [], sessions: [], moves: [], notifs: [], myBids: {}, payments: [], session: null, ready: false,
   /* Carga desde Supabase lo que el usuario actual puede ver */
   async load(){
     await this.loadLots();
     const { data:{ session } } = await sb.auth.getSession();
-    this.users = []; this.sessions = []; this.moves = []; this.notifs = []; this.myBids = {}; this.session = null;
+    this.users = []; this.sessions = []; this.moves = []; this.notifs = []; this.myBids = {}; this.payments = []; this.session = null;
     if (session){
       const uid = session.user.id;
-      const [profiles, bids, moves, notifs, logins] = await Promise.all([
+      const [profiles, bids, moves, notifs, logins, pays] = await Promise.all([
         sb.from('profiles').select('*').order('created_at'),
         sb.from('bids').select('*'),
         sb.from('audit_log').select('*').order('created_at', { ascending:false }).limit(1000),
         sb.from('notifications').select('*').eq('user_id', uid).order('created_at', { ascending:false }).limit(200),
-        sb.from('login_events').select('*').order('created_at', { ascending:false }).limit(1000)
+        sb.from('login_events').select('*').order('created_at', { ascending:false }).limit(1000),
+        sb.from('payments').select('user_id,lot,amount,status,paid_at').eq('status', 'pagada')
       ]);
+      this.payments = (pays.data || []).map(x => ({ userId:x.user_id, lot:x.lot, amount:+x.amount, status:x.status, paidAt:ts(x.paid_at) }));
       this.users = (profiles.data || []).map(toUser);
       if (this.users.some(u => u.id === uid)) this.session = uid;
       (bids.data || []).forEach(b => {
@@ -1774,6 +1776,66 @@ async function logAccess(userId, text){
 }
 const myNotifs = () => DB.session ? DB.notifs.filter(n => n.userId === DB.session) : [];
 const unreadCount = () => myNotifs().filter(n => !n.read).length;
+
+/* ---- Pagos con PayPal (la función 'paypal' en Supabase guarda la clave secreta) ---- */
+const paidLot = lot => DB.payments.find(p => p.lot === lot && p.status === 'pagada') || null;
+let payingLot = null, ppConfig = null, ppSdk = null;
+async function ppCall(body){
+  const { data, error } = await sb.functions.invoke('paypal', { body });
+  if (error){
+    let code = 'ERROR';
+    try { code = (await error.context.json()).error || code; } catch (e) {}
+    throw new Error(code);
+  }
+  return data;
+}
+function loadPayPalSdk(clientId){
+  if (ppSdk) return ppSdk;
+  ppSdk = new Promise((ok, fail) => {
+    const sc = document.createElement('script');
+    sc.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture&enable-funding=card`;
+    sc.onload = ok; sc.onerror = () => { ppSdk = null; fail(new Error('SDK')); };
+    document.head.appendChild(sc);
+  });
+  return ppSdk;
+}
+const PAY_MSG = {
+  NOT_CONFIGURED:'Los pagos con PayPal todavía no están activados.', NOT_WINNER:'Este lote no está adjudicado a tu cuenta.',
+  ALREADY_PAID:'Este lote ya fue pagado.', NO_SESSION:'Tu sesión expiró. Vuelve a iniciar sesión.',
+  PAYPAL_CAPTURE:'PayPal no pudo completar el cobro. No se te cobró nada; inténtalo de nuevo.', SDK:'No se pudo cargar PayPal. Revisa tu conexión.'
+};
+async function payWithPayPal(lot){
+  const box = $('#pp-' + lot), v = VEHICLES.find(x => x.lot === lot);
+  if (!box || !v) return;
+  box.innerHTML = '<p class="muted" style="font-size:.9rem">Cargando PayPal…</p>';
+  payingLot = lot;
+  try {
+    ppConfig = ppConfig || await ppCall({ action:'config' });
+    if (!ppConfig.ready) throw new Error('NOT_CONFIGURED');
+    await loadPayPalSdk(ppConfig.clientId);
+    box.innerHTML = (ppConfig.env === 'sandbox' ? '<p class="muted" style="font-size:.82rem;margin-bottom:8px">Modo de prueba (Sandbox): no se hacen cobros reales.</p>' : '') +
+      `<div id="ppb-${lot}"></div><button class="linkish" style="margin-top:6px" onclick="cancelPay()">Cancelar</button>`;
+    await window.paypal.Buttons({
+      style:{ layout:'vertical', shape:'rect', label:'pay' },
+      createOrder: async () => (await ppCall({ action:'create', lot, vehicle: fullName(v) })).orderId,
+      onApprove: async (d) => {
+        box.innerHTML = '<p class="muted" style="font-size:.9rem">Confirmando el pago…</p>';
+        try {
+          await ppCall({ action:'capture', orderId: d.orderID });
+          toast(`Pago recibido. El lote ${lot} quedó pagado.`);
+        } catch (e) { toast(PAY_MSG[e.message] || 'No se pudo confirmar el pago.'); }
+        payingLot = null; await DB.load(); renderSessionUI(); renderAccount();
+      },
+      onCancel: () => toast('Pago cancelado. Puedes intentarlo de nuevo cuando quieras.'),
+      onError: (e) => { toast(PAY_MSG[e && e.message] || 'PayPal tuvo un problema. Inténtalo de nuevo.'); }
+    }).render('#ppb-' + lot);
+  } catch (e) {
+    payingLot = null;
+    box.innerHTML = `<button class="btn btn-brand btn-sm" onclick="payWithPayPal('${lot}')">Pagar con PayPal</button>`;
+    toast(PAY_MSG[e.message] || 'No se pudo iniciar el pago. Inténtalo de nuevo.');
+  }
+}
+function cancelPay(){ payingLot = null; renderAccount(); }
 
 /* Comisión del comprador: 5 % (mínimo 500 USD) + IVA 19 % */
 function feeTotal(amount){
@@ -2074,7 +2136,7 @@ function userPane(){
   if (acctTab === 'pujas') return `<h2>Mis pujas</h2><p class="lead">Cada lote en el que has ofertado y cómo va.</p>` +
     (bids.length ? bidTable(bids) : emptyPane('Sin pujas registradas', 'Cuando ofertes por un vehículo aparecerá aquí con su estado en tiempo real.'));
   if (acctTab === 'movimientos') return `<h2>Mis movimientos</h2><p class="lead">Historial completo de tu cuenta, del más reciente al más antiguo.</p>` +
-    (moves.length ? `<div class="tl">${moves.map(m => `<div class="tl-item ${m.type === 'ganada' ? 'ok' : (m.type === 'superado' || m.type === 'perdida') ? 'bad' : ''}">
+    (moves.length ? `<div class="tl">${moves.map(m => `<div class="tl-item ${(m.type === 'ganada' || m.type === 'pago') ? 'ok' : (m.type === 'superado' || m.type === 'perdida') ? 'bad' : ''}">
       <b>${m.text}</b>${m.lot ? `<p><button class="linkish" onclick="openLot('${m.lot}')">Ver lote ${m.lot}</button></p>` : ''}
       <time>${new Date(m.at).toLocaleString('es-CO', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</time></div>`).join('')}</div>`
     : emptyPane('Sin movimientos', 'Aquí quedará registrada cada oferta, adjudicación y acceso a tu cuenta.'));
@@ -2086,13 +2148,17 @@ function userPane(){
           <div class="mini" style="width:120px">${photo(b.v)}</div>
           <div style="flex:1;min-width:180px"><b style="font-size:1.05rem;font-family:var(--font)">${fullName(b.v)}</b>
             <span class="muted" style="display:block;font-size:.88rem">Lote ${b.v.lot} · ${b.v.yard}</span></div>
-          <span class="st st-win">Adjudicada</span></div>
+          ${paidLot(b.v.lot) ? '<span class="st st-win">Pagada</span>' : '<span class="st st-out">Pendiente de pago</span>'}</div>
         <table class="t2" style="min-width:0;margin-top:14px"><tbody>
           <tr><td>Precio adjudicado</td><td style="text-align:right"><b>${usd(b.amount)}</b></td></tr>
           <tr><td>Comisión de comprador (5 %)</td><td style="text-align:right">${usd(f.premium)}</td></tr>
           <tr><td>IVA sobre la comisión (19 %)</td><td style="text-align:right">${usd(f.vat)}</td></tr>
           <tr><td><b>Total a pagar</b></td><td style="text-align:right"><b>${usd(f.total)}</b></td></tr>
         </tbody></table>
+        ${paidLot(b.v.lot)
+          ? `<p style="margin-top:12px;font-size:.92rem"><b>Pago recibido</b> el ${dateF(paidLot(b.v.lot).paidAt)} por ${usd(paidLot(b.v.lot).amount)}. Retiro en ${b.v.city} dentro de 5 días hábiles.</p>`
+          : `<div id="pp-${b.v.lot}" style="margin-top:14px;max-width:360px"><button class="btn btn-brand btn-sm" onclick="payWithPayPal('${b.v.lot}')">Pagar con PayPal</button>
+             <span class="muted" style="display:block;font-size:.82rem;margin-top:6px">Puedes pagar con tu cuenta PayPal o con tarjeta débito o crédito.</span></div>`}
         <p class="muted" style="font-size:.85rem;margin-top:10px">Pago dentro de 3 días hábiles. Retiro en ${b.v.city} dentro de 5 días hábiles tras el pago. Traspaso y transporte se cotizan aparte.</p>
       </div>`; }).join('')
       : emptyPane('Sin adjudicaciones', 'Cuando ganes una subasta verás aquí el total a pagar y los plazos.'));
@@ -2178,11 +2244,12 @@ function approvePane(){
       <div style="margin-top:10px;text-align:right"><button class="btn btn-line btn-sm" onclick="adminResolve('${lot}', null)">Declarar desierta</button></div>
     </div>`; }).join('')
     : emptyPane('No hay pujas pendientes', 'Cuando los usuarios oferten, los lotes aparecerán aquí para que apruebes la puja ganadora.');
-  const doneHTML = done.length ? `<div class="table-wrap"><table class="t2"><thead><tr><th>Lote</th><th>Vehículo</th><th>Resultado</th><th>Precio</th><th>Postores</th><th>Fecha</th></tr></thead><tbody>
+  const doneHTML = done.length ? `<div class="table-wrap"><table class="t2"><thead><tr><th>Lote</th><th>Vehículo</th><th>Resultado</th><th>Precio</th><th>Pago</th><th>Postores</th><th>Fecha</th></tr></thead><tbody>
     ${done.map(({ lot, v, bids }) => { const w = bids.find(b => b.state === 'ganada');
       return `<tr><td><button class="linkish" onclick="openLot('${lot}')">${lot}</button></td><td data-l="Vehículo">${fullName(v)}</td>
         <td data-l="Resultado">${w ? `<span class="st st-win">Ganó ${w.user.name}</span>` : '<span class="st st-end">Desierta</span>'}</td>
-        <td data-l="Precio">${w ? `<b>${usd(w.amount)}</b>` : '—'}</td><td data-l="Postores">${bids.length}</td>
+        <td data-l="Precio">${w ? `<b>${usd(w.amount)}</b>` : '—'}</td>
+        <td data-l="Pago">${!w ? '—' : paidLot(lot) ? `<span class="st st-win">Pagado ${usd(paidLot(lot).amount)}</span>` : '<span class="st st-out">Pendiente</span>'}</td><td data-l="Postores">${bids.length}</td>
         <td data-l="Fecha">${dateF(Math.max(...bids.map(b => b.at)))}</td></tr>`; }).join('')}
     </tbody></table></div>` : emptyPane('Sin subastas resueltas', 'Aquí verás cada lote que adjudiques.');
   return `<h2>Aprobar pujas</h2>
@@ -2312,7 +2379,7 @@ function adminUser(uid){
               return `<tr><td><b>Lote ${b.v.lot}</b></td><td data-l="Vehículo">${fullName(b.v)}</td><td data-l="Su oferta"><b>${usd(b.amount)}</b></td><td data-l="Estado"><span class="st ${c2}">${l2}</span></td></tr>`; }).join('')}
           </tbody></table>` : '<p class="muted">Sin pujas registradas.</p>'}</div>
         <div><h4 style="margin:6px 0 8px">Movimientos</h4>
-          ${moves.length ? `<div class="tl">${moves.slice(0, 20).map(m => `<div class="tl-item ${m.type === 'ganada' ? 'ok' : (m.type === 'superado' || m.type === 'perdida') ? 'bad' : ''}">
+          ${moves.length ? `<div class="tl">${moves.slice(0, 20).map(m => `<div class="tl-item ${(m.type === 'ganada' || m.type === 'pago') ? 'ok' : (m.type === 'superado' || m.type === 'perdida') ? 'bad' : ''}">
             <b>${m.text}</b><time>${new Date(m.at).toLocaleString('es-CO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</time></div>`).join('')}</div>`
           : '<p class="muted">Sin movimientos.</p>'}</div>
       </div></div></div>`;
@@ -2365,7 +2432,7 @@ sb.auth.onAuthStateChange((event, session) => {
 });
 /* Refresca pujas y avisos cada 20 segundos para ver las ofertas de otros */
 setInterval(async () => {
-  if (document.hidden || $('#modalRoot').innerHTML) return;
+  if (document.hidden || payingLot || $('#modalRoot').innerHTML) return;
   await DB.load(); renderSessionUI();
   if (SOLO){ if (DB.me()) renderAccount(); } else if (!$('#notifRoot').innerHTML) renderResults();
 }, 20000);

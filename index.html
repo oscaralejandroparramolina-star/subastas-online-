@@ -1659,6 +1659,7 @@ async function placeBid(lot){
     await DB.load(); renderResults();
     if (m){ closeLot(); openLot(lot); return toast(`Otra persona ofertó antes. La oferta mínima ahora es ${usd(+m[1])}.`); }
     if (/LOT_CLOSED/.test(error.message || '')){ closeLot(); return toast('Esta subasta ya fue cerrada por el administrador.'); }
+    if (/BID_LOCKED/.test(error.message || '')){ closeLot(); return toast('Tu puja en este lote ya fue revisada por el administrador, no puedes modificarla.'); }
     return toast('No se pudo registrar la oferta. Inténtalo de nuevo.');
   }
   watched.add(v.lot);
@@ -2114,6 +2115,10 @@ const bidsOf = uid => Object.values(DB.myBids[uid] || {}).map(b => ({ ...b, v: V
 const myBidList = () => DB.session ? bidsOf(DB.session) : [];
 const movesOf = uid => DB.moves.filter(m => m.userId === uid).sort((a, b) => b.at - a.at);
 const STATE_LBL = { ganando:['Vas ganando','st-win'], superado:['Te superaron','st-out'], aceptada:['Puja aceptada','st-win'], rechazada:['Puja rechazada','st-end'], ganada:['Adjudicada','st-win'], perdida:['No ganada','st-end'] };
+/* Color del punto en la línea de tiempo según el tipo de movimiento */
+const MOVE_OK  = ['ganada','pago','aceptada'];
+const MOVE_BAD = ['superado','perdida','rechazada'];
+const MOVE_CLS = t => MOVE_OK.includes(t) ? 'ok' : MOVE_BAD.includes(t) ? 'bad' : '';
 
 function userPane(){
   const me = DB.me(), bids = myBidList(), moves = movesOf(me.id), notifs = myNotifs();
@@ -2135,7 +2140,7 @@ function userPane(){
   if (acctTab === 'pujas') return `<h2>Mis pujas</h2><p class="lead">Cada lote en el que has ofertado y cómo va.</p>` +
     (bids.length ? bidTable(bids) : emptyPane('Sin pujas registradas', 'Cuando ofertes por un vehículo aparecerá aquí con su estado en tiempo real.'));
   if (acctTab === 'movimientos') return `<h2>Mis movimientos</h2><p class="lead">Historial completo de tu cuenta, del más reciente al más antiguo.</p>` +
-    (moves.length ? `<div class="tl">${moves.map(m => `<div class="tl-item ${(m.type === 'ganada' || m.type === 'pago') ? 'ok' : (m.type === 'superado' || m.type === 'perdida') ? 'bad' : ''}">
+    (moves.length ? `<div class="tl">${moves.map(m => `<div class="tl-item ${MOVE_CLS(m.type)}">
       <b>${m.text}</b>${m.lot ? `<p><button class="linkish" onclick="openLot('${m.lot}')">Ver lote ${m.lot}</button></p>` : ''}
       <time>${new Date(m.at).toLocaleString('es-CO', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</time></div>`).join('')}</div>`
     : emptyPane('Sin movimientos', 'Aquí quedará registrada cada oferta, adjudicación y acceso a tu cuenta.'));
@@ -2211,67 +2216,60 @@ const lotBids = lot => Object.entries(DB.myBids)
   .sort((a, b) => b.amount - a.amount || a.at - b.at);
 const lotsWhere = test => [...new Set(Object.values(DB.myBids).flatMap(l => Object.values(l).filter(test).map(b => b.lot)))]
   .map(lot => ({ lot, v: VEHICLES.find(x => x.lot === lot), bids: lotBids(lot) })).filter(x => x.v);
-// Lotes con pujas sin revisar (ninguna fue aceptada/rechazada/resuelta)
-const pendingLots = () => lotsWhere(b => b.state === 'ganando' || b.state === 'superado')
-  .filter(x => !x.bids.some(b => b.state === 'aceptada' || b.state === 'rechazada' || b.state === 'ganada' || b.state === 'perdida'))
-  .sort((a, b) => a.v.lot.localeCompare(b.v.lot));
-// Lotes donde el admin ya aceptó una puja pero aún no adjudica
-const acceptedLots = () => lotsWhere(b => b.state === 'aceptada')
+const OPEN_ST = ['ganando','superado','aceptada','rechazada'];
+// Lotes que el admin todavía no ha adjudicado ni declarado desiertos
+const openLots = () => lotsWhere(b => OPEN_ST.includes(b.state))
   .filter(x => !x.bids.some(b => b.state === 'ganada' || b.state === 'perdida'))
-  .sort((a, b) => a.v.lot.localeCompare(b.v.lot));
+  .sort((a, b) => a.lot.localeCompare(b.lot));
+// Paso 1: ninguna puja aceptada todavía
+const pendingLots = () => openLots().filter(x => !x.bids.some(b => b.state === 'aceptada'));
+// Paso 2: ya hay al menos una puja aceptada, falta adjudicar
+const acceptedLots = () => openLots().filter(x => x.bids.some(b => b.state === 'aceptada'));
 const resolvedLots = () => lotsWhere(b => b.state === 'ganada' || b.state === 'perdida')
-  .filter(x => !x.bids.some(b => b.state === 'ganando' || b.state === 'superado' || b.state === 'aceptada'))
+  .filter(x => !x.bids.some(b => OPEN_ST.includes(b.state) && b.state !== 'rechazada'))
   .sort((a, b) => Math.max(...b.bids.map(x => x.at)) - Math.max(...a.bids.map(x => x.at)));
 
 function approvePane(){
   const pend = pendingLots(), acc = acceptedLots(), done = resolvedLots().slice(0, 30);
   const fmtDT = t => new Date(t).toLocaleString('es-CO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
 
-  /* ---- Paso 1: pujas sin revisar ---- */
-  const pendHTML = pend.length ? pend.map(({ lot, v, bids }) => {
-    return `<div style="border:1px solid var(--line);border-radius:12px;margin-bottom:16px;padding:16px;background:#fff">
+  /* Fila de postor: el botón depende del estado de su puja */
+  const bidRow = (lot, b, top) => {
+    const nuevo = b.state === 'ganando' || b.state === 'superado';
+    const [lbl, cls] = STATE_LBL[b.state] || ['—','st-end'];
+    return `<tr>
+      <td><b>${b.user.name}</b><span class="muted" style="display:block;font-size:.8rem">${b.user.email}</span></td>
+      <td data-l="Oferta"><b>${usd(b.amount)}</b>${top ? ' <span class="st st-win">Más alta</span>' : ''}</td>
+      <td data-l="Fecha">${fmtDT(b.at)}</td>
+      <td data-l="Estado"><span class="st ${cls}">${b.state === 'ganando' ? 'Va ganando' : b.state === 'superado' ? 'Superado' : lbl}</span></td>
+      <td style="white-space:nowrap">${
+        nuevo ? `<button class="btn btn-brand btn-sm" onclick="adminAccept('${lot}','${b.user.id}')">✓ Aceptar puja</button>
+                 <button class="btn btn-line btn-sm" style="margin-left:4px" onclick="adminReject('${lot}','${b.user.id}')">✕ Rechazar</button>`
+        : b.state === 'aceptada' ? `<button class="btn btn-brand btn-sm" onclick="adminResolve('${lot}','${b.user.id}')">🏆 Adjudicar ganador</button>`
+        : '<span class="muted" style="font-size:.85rem">Ya revisada</span>'}</td>
+    </tr>`;
+  };
+
+  /* Tarjeta de lote, igual para Paso 1 y Paso 2 */
+  const lotCard = ({ lot, v, bids }, paso2) => {
+    const vivas = bids.filter(b => OPEN_ST.includes(b.state));
+    return `<div style="border:${paso2 ? '2px solid var(--brand)' : '1px solid var(--line)'};border-radius:12px;margin-bottom:16px;padding:16px;background:#fff">
       <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
         <div class="mini" style="width:110px">${photo(v)}</div>
         <div style="flex:1;min-width:200px"><button class="linkish" style="font-weight:700;font-size:1.05rem" onclick="openLot('${lot}')">${fullName(v)}</button>
-          <span class="muted" style="display:block;font-size:.88rem">Lote ${lot} · ${v.yard} · ${bids.length} postor${bids.length === 1 ? '' : 'es'}</span></div>
-        <div style="text-align:right"><span class="badge">Paso 1 — Revisar pujas</span></div>
+          <span class="muted" style="display:block;font-size:.88rem">Lote ${lot} · ${v.yard} · ${vivas.length} postor${vivas.length === 1 ? '' : 'es'}</span></div>
+        <div style="text-align:right"><span class="badge ${paso2 ? 'badge-ok' : ''}">${paso2 ? 'Paso 2 — Definir ganador' : 'Paso 1 — Revisar pujas'}</span></div>
       </div>
       <div class="table-wrap" style="margin-top:12px"><table class="t2" style="min-width:0"><thead><tr><th>Postor</th><th>Oferta</th><th>Fecha</th><th>Estado</th><th></th></tr></thead><tbody>
-        ${bids.map((b, i) => `<tr>
-          <td><b>${b.user.name}</b><span class="muted" style="display:block;font-size:.8rem">${b.user.email}</span></td>
-          <td data-l="Oferta"><b>${usd(b.amount)}</b>${i === 0 ? ' <span class="st st-win">Más alta</span>' : ''}</td>
-          <td data-l="Fecha">${fmtDT(b.at)}</td>
-          <td data-l="Estado"><span class="st ${(STATE_LBL[b.state] || [])[1] || 'st-end'}">${b.state === 'ganando' ? 'Va ganando' : 'Superado'}</span></td>
-          <td style="white-space:nowrap">
-            <button class="btn btn-brand btn-sm" onclick="adminAccept('${lot}','${b.user.id}')">✓ Aceptar puja</button>
-            <button class="btn btn-line btn-sm" style="margin-left:4px" onclick="adminReject('${lot}','${b.user.id}')">✕ Rechazar</button>
-          </td>
-        </tr>`).join('')}
-      </tbody></table></div>
-    </div>`; }).join('')
-    : emptyPane('No hay pujas sin revisar', 'Cuando los usuarios oferten, aparecerán aquí para que aceptes o rechaces cada una.');
-
-  /* ---- Paso 2: pujas aceptadas esperando adjudicación ---- */
-  const accHTML = acc.length ? acc.map(({ lot, v, bids }) => {
-    const accepted = bids.filter(b => b.state === 'aceptada');
-    return `<div style="border:2px solid var(--brand);border-radius:12px;margin-bottom:16px;padding:16px;background:#fff">
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-        <div class="mini" style="width:110px">${photo(v)}</div>
-        <div style="flex:1;min-width:200px"><button class="linkish" style="font-weight:700;font-size:1.05rem" onclick="openLot('${lot}')">${fullName(v)}</button>
-          <span class="muted" style="display:block;font-size:.88rem">Lote ${lot} · ${v.yard}</span></div>
-        <div style="text-align:right"><span class="badge badge-ok">Paso 2 — Definir ganador</span></div>
-      </div>
-      <div class="table-wrap" style="margin-top:12px"><table class="t2" style="min-width:0"><thead><tr><th>Postor</th><th>Oferta</th><th>Estado</th><th></th></tr></thead><tbody>
-        ${accepted.map(b => `<tr>
-          <td><b>${b.user.name}</b><span class="muted" style="display:block;font-size:.8rem">${b.user.email}</span></td>
-          <td data-l="Oferta"><b>${usd(b.amount)}</b></td>
-          <td data-l="Estado"><span class="st st-win">Puja aceptada</span></td>
-          <td><button class="btn btn-brand btn-sm" onclick="adminResolve('${lot}','${b.user.id}')">🏆 Adjudicar ganador</button></td>
-        </tr>`).join('')}
+        ${vivas.map((b, i) => bidRow(lot, b, i === 0)).join('')}
       </tbody></table></div>
       <div style="margin-top:10px;text-align:right"><button class="btn btn-line btn-sm" onclick="adminResolve('${lot}', null)">Declarar desierta</button></div>
-    </div>`;}).join('')
-    : '';
+    </div>`;
+  };
+
+  const pendHTML = pend.length ? pend.map(x => lotCard(x, false)).join('')
+    : emptyPane('No hay pujas sin revisar', 'Cuando los usuarios oferten, aparecerán aquí para que aceptes o rechaces cada una.');
+  const accHTML = acc.map(x => lotCard(x, true)).join('');
 
   /* ---- Subastas resueltas ---- */
   const doneHTML = done.length ? `<div class="table-wrap"><table class="t2"><thead><tr><th>Lote</th><th>Vehículo</th><th>Resultado</th><th>Precio</th><th>Pago</th><th>Postores</th><th>Fecha</th></tr></thead><tbody>
@@ -2293,6 +2291,22 @@ function approvePane(){
 let resolving = false;
 const plainText = s => { const t = document.createElement('textarea'); t.innerHTML = s; return t.value; };
 
+/* Traduce los errores del servidor a mensajes entendibles */
+const RPC_ERR = [
+  ['NOT_ADMIN',            'Solo el administrador puede hacer esto. Vuelve a iniciar sesión como admin.'],
+  ['BID_ALREADY_REVIEWED', 'Esta puja ya fue revisada antes. Recarga la página para ver su estado actual.'],
+  ['BID_NOT_FOUND',        'No se encontró esa puja. Recarga la página.'],
+  ['WINNER_NOT_ACCEPTED',  'Primero debes aceptar la puja de ese postor (Paso 1) antes de adjudicarle el lote.'],
+  ['ALREADY_CLOSED',       'Este lote ya estaba cerrado.'],
+  ['NO_PENDING_BIDS',      'Este lote ya no tiene pujas por resolver.'],
+  ['BID_LOCKED',           'Tu puja en este lote ya fue revisada por el administrador.'],
+];
+function rpcMsg(error, fallback){
+  const m = (error && (error.message || error.details || '')) || '';
+  const hit = RPC_ERR.find(([code]) => m.includes(code));
+  return hit ? hit[1] : fallback;
+}
+
 /* Paso 1a: aceptar una puja (notifica al usuario que fue aceptada) */
 async function adminAccept(lot, uid){
   if (resolving) return;
@@ -2303,8 +2317,7 @@ async function adminAccept(lot, uid){
   const { error } = await sb.rpc('admin_accept_bid', { p_lot: lot, p_bidder: uid, p_vehicle: fullName(v) });
   resolving = false;
   if (error){
-    const m = error.message || '';
-    toast(m.includes('NOT_ADMIN') ? 'Solo el administrador puede hacer esto.' : 'No se pudo aceptar la puja. Inténtalo de nuevo.');
+    toast(rpcMsg(error, 'No se pudo aceptar la puja. Inténtalo de nuevo.'));
   } else {
     toast(`Puja de ${plainText(b.user.name)} aceptada. Ahora ve al Paso 2 para adjudicar.`);
   }
@@ -2321,7 +2334,7 @@ async function adminReject(lot, uid){
   const { error } = await sb.rpc('admin_reject_bid', { p_lot: lot, p_bidder: uid, p_vehicle: fullName(v) });
   resolving = false;
   if (error){
-    toast('No se pudo rechazar la puja. Inténtalo de nuevo.');
+    toast(rpcMsg(error, 'No se pudo rechazar la puja. Inténtalo de nuevo.'));
   } else {
     toast(`Puja de ${plainText(b.user.name)} rechazada. Se avisó al usuario.`);
   }
@@ -2341,8 +2354,7 @@ async function adminResolve(lot, uid){
   const { error } = await sb.rpc('admin_resolve_lot', { p_lot: lot, p_winner: uid, p_vehicle: fullName(v) });
   resolving = false;
   if (error){
-    const m = error.message || '';
-    toast(m.includes('ALREADY_CLOSED') ? 'Este lote ya estaba cerrado.' : m.includes('NOT_ADMIN') ? 'Solo el administrador puede aprobar pujas.' : 'No se pudo cerrar la subasta. Inténtalo de nuevo.');
+    toast(rpcMsg(error, 'No se pudo cerrar la subasta. Inténtalo de nuevo.'));
   } else {
     toast(b ? `Lote ${lot} adjudicado a ${plainText(b.user.name)}. Ya se avisó a todos los postores.` : `Subasta del lote ${lot} declarada desierta.`);
   }
@@ -2450,7 +2462,7 @@ function adminUser(uid){
               return `<tr><td><b>Lote ${b.v.lot}</b></td><td data-l="Vehículo">${fullName(b.v)}</td><td data-l="Su oferta"><b>${usd(b.amount)}</b></td><td data-l="Estado"><span class="st ${c2}">${l2}</span></td></tr>`; }).join('')}
           </tbody></table>` : '<p class="muted">Sin pujas registradas.</p>'}</div>
         <div><h4 style="margin:6px 0 8px">Movimientos</h4>
-          ${moves.length ? `<div class="tl">${moves.slice(0, 20).map(m => `<div class="tl-item ${(m.type === 'ganada' || m.type === 'pago') ? 'ok' : (m.type === 'superado' || m.type === 'perdida') ? 'bad' : ''}">
+          ${moves.length ? `<div class="tl">${moves.slice(0, 20).map(m => `<div class="tl-item ${MOVE_CLS(m.type)}">
             <b>${m.text}</b><time>${new Date(m.at).toLocaleString('es-CO', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</time></div>`).join('')}</div>`
           : '<p class="muted">Sin movimientos.</p>'}</div>
       </div></div></div>`;
